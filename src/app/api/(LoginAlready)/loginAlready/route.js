@@ -12,8 +12,8 @@ export async function POST(req) {
         body: formData,
     });
 
-    const data = await response.json();
-    console.log("response data",data);
+    const data =  await response.json();
+    // console.log("response data",data);
     
     return NextResponse.json(data)
 }

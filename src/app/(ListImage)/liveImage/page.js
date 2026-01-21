@@ -1,5 +1,5 @@
 import React from 'react'
-import LiveImage from '../../../../components/templates/LiveImage/LiveImage'
+import LiveImage from '../../../../components/templates/CreateContent/LiveImage'
 
 const page = () => {
   return (
@@ -10,3 +10,5 @@ const page = () => {
 }
 
 export default page
+
+

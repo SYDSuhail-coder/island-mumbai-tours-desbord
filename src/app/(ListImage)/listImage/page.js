@@ -1,9 +1,10 @@
 import React from 'react'
-import SideBaar from "../../../../components/templates/SideBaar/SideBaar"
+import ListImage from '../../../../components/templates/CreateContent/ListImage'
+
 const page = () => {
   return (
     <div>
-        <SideBaar/>
+        <ListImage/>
     </div>
   )
 }

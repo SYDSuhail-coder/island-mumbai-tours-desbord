@@ -1,9 +1,8 @@
-"use client";
-import React, { useState } from "react";
+"use client"
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Box,
-  CssBaseline,
   Drawer,
   Toolbar,
   Typography,
@@ -16,30 +15,90 @@ import {
   Button,
 } from "@mui/material";
 
+import ProductionQuantityLimitsOutlinedIcon from '@mui/icons-material/ProductionQuantityLimitsOutlined';
 import MenuIcon from "@mui/icons-material/Menu";
+import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import ImageSearchOutlinedIcon from '@mui/icons-material/ImageSearchOutlined';
+import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import LogoutIcon from "@mui/icons-material/Logout";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import SettingsIcon from "@mui/icons-material/Settings";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+// import { Button } from "@mui/material";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { deleteModules } from "../reduxForLogin/action";
 
 const drawerWidth = 240;
-
-export default function SideBaar({ children }) {
+export default function SideBaar(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openMenu, setOpenMenu] = useState(false);
   const router = useRouter();
-
+  const loginDetails = useSelector((state) => state.login);
+  const dispatch = useDispatch();
+  const { window } = props;
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-
   const handleLogout = () => {
+    dispatch(deleteModules());
     router.push("/login");
+  };
+
+  const [open1, setOpen1] = React.useState(false);
+  const [open2, setOpen2] = React.useState(false);
+  const [open3, setOpen3] = React.useState(false);
+  const [Dashboard, setDashboard] = useState({
+    id: 608618,
+    allowed: true,
+    pages: [
+      { id: 620523, allowed: true },
+      { id: 204363, allowed: true },
+    ],
+  });
+
+  const [liveImage, setliveImage] = useState({
+    id: 608619, allowed: true,
+    pages: [
+      { id: 620522, allowed: true },
+      { id: 204362, allowed: true },
+    ],
+  })
+
+  const [createLogin, setcreateLogin] = useState({
+    id: 608611, allowed: true,
+    pages: [
+      { id: 620511, allowed: true },
+    ],
+  })
+
+  useEffect(() => {
+    // setliveImage({
+    //   id: loginDetails.roleInfo.modules[0].id,
+    //   allowed: loginDetails.roleInfo.modules[0].allowed,
+    //   pages: [{
+    //     id: loginDetails.roleInfo.modules[0].pages[0].id,
+    //     allowed: loginDetails.roleInfo.modules[0].pages[0].allowed
+    //   },
+    //   {
+    //     id: loginDetails.roleInfo.modules[0].pages[1].id,
+    //     allowed: loginDetails.roleInfo.modules[0].pages[1].allowed
+    //   },
+    //   ]
+    // })
+  }, [])
+
+  const handleClick1 = () => {
+    setOpen1(!open1);
+  };
+  const handleClick2 = () => {
+    setOpen2(!open2);
+  };
+
+  const handleClick3 = () => {
+    setOpen3(!open3);
   };
 
   const drawer = (
@@ -48,66 +107,94 @@ export default function SideBaar({ children }) {
         height: "100%",
         color: "#065f46",
         background: "linear-gradient(177deg, #ecfdf1, #065f35)",
-
       }}
     >
       <Typography variant="h6" sx={{ p: 2 }}>
         Zyra Dashboard
       </Typography>
 
-      <List>
-        {/* Dashboard */}
-        <ListItemButton component={Link} href="/dashboard">
-          <ListItemIcon sx={{ color: "#065f46" }}>
-            <DashboardIcon />
-          </ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItemButton>
+      {Dashboard.id == 608618 && Dashboard.allowed == true ?
+        <List>
+          <ListItemButton onClick={handleClick1} sx={{ color: "success" }}>
+            <ListItemIcon>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText primary="Dashboard" sx={{ color: "success" }} />
+            {open1 ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={open1} timeout="auto" unmountOnExit>
+            {Dashboard?.pages[0].id == 620523 && Dashboard?.pages[0].allowed == true ?
+              <ListItemButton sx={{ pl: 4 }} component={Link} href="/dashboard">
+                <ListItemIcon>
+                  <DashboardIcon sx={{ color: "success" }} />
+                </ListItemIcon>
+                <ListItemText primary="Dashboard" sx={{ color: "success" }} />
+              </ListItemButton>
+              : <></>}
+          </Collapse>
+        </List>
+        : <></>}
 
-        <ListItemButton component={Link} href="/liveImage">
-          <ListItemIcon sx={{ color: "#065f46" }}>
-            <ImageSearchOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText primary="Live Image" />
-        </ListItemButton>
+      {liveImage.id == 608619 && liveImage.allowed == true ?
+        <List>
+          <ListItemButton onClick={handleClick2} sx={{ color: "success" }}>
+            <ListItemIcon>
+              <ProductionQuantityLimitsOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary="Latest Products" sx={{ color: "success" }} />
+            {open1 ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={open2} timeout="auto" unmountOnExit>
+            {liveImage?.pages[0].id == 620522 && liveImage?.pages[0].allowed == true ?
+              <ListItemButton sx={{ pl: 4 }} component={Link} href="/liveImage">
+                <ListItemIcon>
+                  <ImageSearchOutlinedIcon sx={{ color: "success" }} />
+                </ListItemIcon>
+                <ListItemText primary="Live-Image" sx={{ color: "success" }} />
+              </ListItemButton>
+              : <></>}
 
-        {/* Settings Menu */}
-        <ListItemButton onClick={() => setOpenMenu(!openMenu)}>
-          <ListItemIcon sx={{ color: "#065f46" }}>
-            <SettingsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Settings" />
-          {openMenu ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
+            {liveImage?.pages[1].id == 204362 && liveImage?.pages[1].allowed == true ?
+              <ListItemButton sx={{ pl: 4 }} component={Link} href="/listImage">
+                <ListItemIcon>
+                  <PlaylistAddOutlinedIcon />
+                </ListItemIcon>
+                <ListItemText primary="List-Image" sx={{ color: "success" }} />
+              </ListItemButton>
+              : <></>}
+          </Collapse>
+        </List>
+        : <></>}
 
-        <Collapse in={openMenu} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItemButton
-              component={Link}
-              href="/dashboard/profile"
-              sx={{ pl: 4 }}
-            >
-              <ListItemText primary="Profile" />
-            </ListItemButton>
-
-            <ListItemButton
-              component={Link}
-              href="/dashboard/users"
-              sx={{ pl: 4 }}
-            >
-              <ListItemText primary="Users" />
-            </ListItemButton>
-          </List>
-        </Collapse>
-      </List>
+      {createLogin.id == 608611 && createLogin.allowed == true ?
+        <List>
+          <ListItemButton onClick={handleClick3} sx={{ color: "success" }}>
+            <ListItemIcon>
+              <LoginOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary="Login-Page-Id" sx={{ color: "success" }} />
+            {open1 ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={open3} timeout="auto" unmountOnExit>
+            {createLogin?.pages[0].id == 620511 && createLogin?.pages[0].allowed == true ?
+              <ListItemButton sx={{ pl: 4 }} component={Link} href="/createLoginPageId">
+                <ListItemIcon>
+                  <PinOutlinedIcon sx={{ color: "success" }} />
+                </ListItemIcon>
+                <ListItemText primary="Page-Id" sx={{ color: "success" }} />
+              </ListItemButton>
+              : <></>}
+          </Collapse>
+        </List>
+        : <></>}
     </Box>
   );
 
+  const container =
+    window !== undefined ? () => window().document.body : undefined;
+
   return (
     <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-
-      {/* TOP BAR */}
       <AppBar
         position="fixed"
         sx={{
@@ -137,6 +224,7 @@ export default function SideBaar({ children }) {
       {/* DRAWER */}
       <Box component="nav" sx={{ width: { sm: drawerWidth } }}>
         <Drawer
+          container={container}
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
@@ -149,7 +237,6 @@ export default function SideBaar({ children }) {
         >
           {drawer}
         </Drawer>
-
         <Drawer
           variant="permanent"
           sx={{
@@ -173,8 +260,11 @@ export default function SideBaar({ children }) {
         }}
       >
         <Toolbar />
-        {children}
+        <div>{props.children}</div>
+
       </Box>
     </Box>
   );
 }
+
+
