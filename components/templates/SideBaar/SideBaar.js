@@ -37,6 +37,7 @@ export default function SideBaar(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
   const loginDetails = useSelector((state) => state.login);
+  console.log("response", loginDetails)
   const dispatch = useDispatch();
   const { window } = props;
   const handleDrawerToggle = () => {
@@ -51,44 +52,64 @@ export default function SideBaar(props) {
   const [open2, setOpen2] = React.useState(false);
   const [open3, setOpen3] = React.useState(false);
   const [Dashboard, setDashboard] = useState({
-    id: 608618,
-    allowed: true,
+    id: 0, allowed: false,
     pages: [
-      { id: 620523, allowed: true },
-      { id: 204363, allowed: true },
-    ],
+      { id: 0, allowed: false }
+    ]
   });
 
-  const [liveImage, setliveImage] = useState({
-    id: 608619, allowed: true,
-    pages: [
-      { id: 620522, allowed: true },
-      { id: 204362, allowed: true },
-    ],
-  })
+  // const [liveImage, setliveImage] = useState({
+  //   id: 0, allowed: false,
+  //   pages: [
+  //     { id: 0, allowed: false },
+  //     { id: 0, allowed: false },
+  //   ]
+  // })
 
-  const [createLogin, setcreateLogin] = useState({
-    id: 608611, allowed: true,
-    pages: [
-      { id: 620511, allowed: true },
-    ],
-  })
+  // const [createLogin, setcreateLogin] = useState({
+  //   id: 608611, allowed: true,
+  //   pages: [
+  //     { id: 620511, allowed: true },
+  //   ],
+  // })
+
+
+  // useEffect(() => {
+  //    console.log("hello loginDetails",loginDetails)
+  //   setDashboard({
+  //     id: loginDetails.roleInfo.modules[0].id,
+  //     allowed: loginDetails.roleInfo.modules[0].allowed,
+  //     pages: [{
+  //       id: loginDetails.roleInfo.modules[0].pages[1].id,
+  //       allowed: loginDetails.roleInfo.modules[0].pages[1].allowed
+  //     }]
+  //   })
+  // }, [loginDetails])
+
+
 
   useEffect(() => {
-    // setliveImage({
-    //   id: loginDetails.roleInfo.modules[0].id,
-    //   allowed: loginDetails.roleInfo.modules[0].allowed,
-    //   pages: [{
-    //     id: loginDetails.roleInfo.modules[0].pages[0].id,
-    //     allowed: loginDetails.roleInfo.modules[0].pages[0].allowed
-    //   },
-    //   {
-    //     id: loginDetails.roleInfo.modules[0].pages[1].id,
-    //     allowed: loginDetails.roleInfo.modules[0].pages[1].allowed
-    //   },
-    //   ]
-    // })
-  }, [])
+    const modules = loginDetails?.roleInfo?.modules;
+
+    if (!modules || modules.length === 0) {
+      console.warn("No modules found");
+      return;
+    }
+
+    const dashboardModule = modules.find(
+      (m) => m.id === 390600 && m.allowed
+    );
+
+    if (!dashboardModule) return;
+
+    setDashboard({
+      id: dashboardModule.id,
+      allowed: dashboardModule.allowed,
+      pages: dashboardModule.pages || []
+    });
+
+  }, [loginDetails]);
+
 
   const handleClick1 = () => {
     setOpen1(!open1);
@@ -109,33 +130,22 @@ export default function SideBaar(props) {
         background: "linear-gradient(177deg, #ecfdf1, #065f35)",
       }}
     >
-      <Typography variant="h6" sx={{ p: 2 }}>
-        Zyra Dashboard
-      </Typography>
+      {/* <Typography variant="h6" sx={{ p: 2 }}>
+         Dashboard
+      </Typography> */}
 
-      {Dashboard.id == 608618 && Dashboard.allowed == true ?
-        <List>
-          <ListItemButton onClick={handleClick1} sx={{ color: "success" }}>
+      {Dashboard.allowed &&
+        Dashboard.pages?.some(p => p.id === 966260 && p.allowed) && (
+          <ListItemButton sx={{ pl: 4 }} component={Link} href="/dashboard">
             <ListItemIcon>
-              <DashboardIcon />
+              <DashboardIcon sx={{ color: "success" }} />
             </ListItemIcon>
-            <ListItemText primary="Dashboard" sx={{ color: "success" }} />
-            {open1 ? <ExpandLess /> : <ExpandMore />}
+            <ListItemText primary="Dashboard" />
           </ListItemButton>
-          <Collapse in={open1} timeout="auto" unmountOnExit>
-            {Dashboard?.pages[0].id == 620523 && Dashboard?.pages[0].allowed == true ?
-              <ListItemButton sx={{ pl: 4 }} component={Link} href="/dashboard">
-                <ListItemIcon>
-                  <DashboardIcon sx={{ color: "success" }} />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" sx={{ color: "success" }} />
-              </ListItemButton>
-              : <></>}
-          </Collapse>
-        </List>
-        : <></>}
+        )}
 
-      {liveImage.id == 608619 && liveImage.allowed == true ?
+
+      {/* {liveImage.id == 390600 && liveImage.allowed == true ?
         <List>
           <ListItemButton onClick={handleClick2} sx={{ color: "success" }}>
             <ListItemIcon>
@@ -145,7 +155,7 @@ export default function SideBaar(props) {
             {open1 ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={open2} timeout="auto" unmountOnExit>
-            {liveImage?.pages[0].id == 620522 && liveImage?.pages[0].allowed == true ?
+            {liveImage?.pages[0].id == 966260 && liveImage?.pages[0].allowed == true ?
               <ListItemButton sx={{ pl: 4 }} component={Link} href="/liveImage">
                 <ListItemIcon>
                   <ImageSearchOutlinedIcon sx={{ color: "success" }} />
@@ -154,7 +164,7 @@ export default function SideBaar(props) {
               </ListItemButton>
               : <></>}
 
-            {liveImage?.pages[1].id == 204362 && liveImage?.pages[1].allowed == true ?
+            {liveImage?.pages[1].id == 966260 && liveImage?.pages[1].allowed == true ?
               <ListItemButton sx={{ pl: 4 }} component={Link} href="/listImage">
                 <ListItemIcon>
                   <PlaylistAddOutlinedIcon />
@@ -164,9 +174,9 @@ export default function SideBaar(props) {
               : <></>}
           </Collapse>
         </List>
-        : <></>}
+        : <></>} */}
 
-      {createLogin.id == 608611 && createLogin.allowed == true ?
+      {/* {createLogin.id == 608611 && createLogin.allowed == true ?
         <List>
           <ListItemButton onClick={handleClick3} sx={{ color: "success" }}>
             <ListItemIcon>
@@ -186,7 +196,7 @@ export default function SideBaar(props) {
               : <></>}
           </Collapse>
         </List>
-        : <></>}
+        : <></>} */}
     </Box>
   );
 

@@ -1,9 +1,36 @@
 "use client";
-import { useState } from "react";
-import { User, Mail, Lock, Eye, EyeOff, UserCog } from "lucide-react";
+
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Grid,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+
+import {
+  Visibility,
+  VisibilityOff,
+  Delete,
+} from "@mui/icons-material";
+
 import axios from "axios";
-import { Trash } from "lucide-react";
-import { useEffect } from "react";
 
 const CreateLoginPageId = () => {
   const [name, setName] = useState("");
@@ -16,34 +43,92 @@ const CreateLoginPageId = () => {
   const [list, setList] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(3);
+  const [deleteId, setDeleteId] = useState(null);
+  const [emailError, setEmailError] = useState("");
 
-  //Add api
+
+  // CREATE
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (password.length !== 6) {
+  //     setError("Password must be exactly 6 characters");
+  //     return;
+  //   }
+  //   if (password !== confirm) {
+  //     setError("Passwords do not match");
+  //     return;
+  //   }
+
+  //   const formData = new FormData();
+  //   formData.append("name", name);
+  //   formData.append("email", email);
+  //   formData.append("roleId", roleId);
+  //   formData.append("password", password);
+
+  //   await axios.post("/api/createLoginPageId", formData);
+  //   fetchList(page, limit);
+
+  //   setName("");
+  //   setEmail("");
+  //   setRoleId("");
+  //   setPassword("");
+  //   setConfirm("");
+  //   setError("");
+  // };
+
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (password.length !== 6) {
-      setError("Password must be exactly 6 characters long.");
+  e.preventDefault();
+
+  setError("");
+  setEmailError("");
+
+  if (password.length !== 6) {
+    setError("Password must be exactly 6 characters");
+    return;
+  }
+
+  if (password !== confirm) {
+    setError("Passwords do not match");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("email", email);
+  formData.append("roleId", roleId);
+  formData.append("password", password);
+
+  try {
+    const res = await axios.post("/api/createLoginPageId", formData);
+
+    if (res.data.statusCode !== 200) {
+      if (res.data.errorType === "EMAIL_EXISTS") {
+        setEmailError("Email already exists");
+      } else {
+        setError(res.data.message || "Something went wrong");
+      }
       return;
     }
-    if (password !== confirm) {
-      setError("Passwords do not match");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("roleId", roleId);
-    formData.append("password", password);
-    const url = `/api/createLoginPageId`;
-    await axios.post(url, formData);
+
+    // success
     fetchList(page, limit);
     setName("");
     setEmail("");
     setRoleId("");
     setPassword("");
     setConfirm("");
-  };
+    setError("");
+    setEmailError("");
 
-  //List api
+  } catch (err) {
+    setError("Server error");
+  }
+};
+
+
+  // LIST
   const fetchList = async (pageNo = page, perPage = limit) => {
     const res = await fetch(`/api/listLoginPageId?From=${pageNo}&to=${perPage}`);
     const data = await res.json();
@@ -54,169 +139,202 @@ const CreateLoginPageId = () => {
     fetchList(page, limit);
   }, [page, limit]);
 
-  //Delete api
-  const handleDelete = async (_id) => {
-  alert("Are you sure you want to delete this role?")
-  await axios.delete(`/api/deleteLoginPageId/${_id}`);
-  fetchList(page, limit);
-};
+  // DELETE
+  const handleDelete = async () => {
+    await axios.delete(`/api/deleteLoginPageId/${deleteId}`);
+    setDeleteId(null);
+    fetchList(page, limit);
+  };
 
   return (
-    <section className="flex justify-between min-h-screen p-6 m-5 from-emerald-100 to-emerald-900 space-y-14">
-      <div className="w-full max-w-4xl bg-gray-800  shadow-xl ring-1 ring-emerald-100 p-8 gap-3">
-        <h2 className="text-3xl font-extrabold text-white text-center mb-6">
-          Create Roles Id
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-white mb-1">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-2.5 h-5 w-5 text-white" />
-              <input
-                type="text"
-                required
+    <Box p={4}
+      sx={{
+        minHeight: "110vh",
+        background: "linear-gradient(177deg, #ecfdf1, #065f35)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+      }}>
+      <Grid container spacing={4}>
+        {/* CREATE FORM */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 4, bgcolor: "" }}>
+            <Typography variant="h5" align="center" color="black" mb={3}>
+              Create Role Id
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                label="Full Name"
+                margin="normal"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="w-full pl-10 py-2 border rounded-md text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm text-white mb-1">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-white" />
-              <input
-                type="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full pl-10 py-2 border rounded-md text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-sm text-white mb-1">RoleId</label>
-            <div className="relative">
-              <UserCog className="absolute left-3 top-2.5 h-5 w-5 text-white" />
-              <input
-                type="num"
+              <TextField
+                fullWidth
+                label="Email"
+                margin="normal"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError("");
+                }}
                 required
+                error={Boolean(emailError)}
+                helperText={emailError}
+              />
+
+              <TextField
+                fullWidth
+                label="Role Id"
+                margin="normal"
                 value={roleId}
                 onChange={(e) => setRoleId(e.target.value)}
-                placeholder="Enter RoleId"
-                className="w-full pl-10 py-2 border rounded-md text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-white mb-1">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-2.5 h-5 w-5 text-white" />
-              <input
-                type={showPassword ? "text" : "password"}
                 required
+              />
+
+              <TextField
+                fullWidth
+                label="Password"
+                margin="normal"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                maxLength={6}
-                placeholder="••••••"
-                className="w-full pl-10 pr-10 py-2 border rounded-md text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 cursor-pointer text-white"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-white mb-1">Confirm Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-2.5 h-5 w-5 text-white" />
-              <input
-                type={showPassword ? "text" : "password"}
+                inputProps={{ maxLength: 6 }}
                 required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="Confirm Password"
+                margin="normal"
+                type={showPassword ? "text" : "password"}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                maxLength={6}
-                placeholder="••••••"
-                className="w-full pl-10 pr-10 py-2 border rounded-md text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                inputProps={{ maxLength: 6 }}
+                required
               />
-            </div>
-          </div>
 
-          {error && <p className="text-red-500 text-center">{error}</p>}
+              {error && (
+                <Typography color="error" align="center" mt={1}>
+                  {error}
+                </Typography>
+              )}
 
-          <div className="flex justify-center mt-2">
-            <button className="w-full px-6 py-2 bg-green-300 text-black font-semibold rounded-md hover:bg-green-400 transition">
-              Create Role
-            </button>
-          </div>
-        </form>
-      </div>
-      <div className="w-full max-w-4xl bg-gray-800 shadow-xl ring-1 ring-emerald-100 p-5">
-        <h2 className="text-3xl font-extrabold text-white text-center mt-6">
-          List Roles Id
-        </h2>
-        <div className="flex justify-between items-center mt-4 text-white mb-4">
-          <div className="flex items-center gap-2">
-            <select
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{
+                  background: "linear-gradient(177deg, #ecfdf1, #065f35)",
+                  color: "black",
+                  fontWeight: "bold",
+                  py: 1.6,
+                  fontSize: "16px",
+                  "&:hover": {
+                    opacity: 0.9,
+                  },
+                }}
+              >
+                Create Role
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* LIST TABLE */}
+        <Paper
+          sx={{
+            p: 4,
+            width: "100%",
+          }}
+        >
+          <Typography variant="h5" align="center" color="black" mb={3}>
+            List Roles Id
+          </Typography>
+
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <Select
               value={limit}
               onChange={(e) => {
-                setLimit(Number(e.target.value));
+                setLimit(e.target.value);
                 setPage(1);
               }}
-              className=" w-50 h-12 bg-gray-800  border border-emerald-500  text-white text-sm
-            rounded-md px-3 py-1.5 outline-nonefocus:ring-2 focus:ring-emerald-500 cursor-pointer">
-              <option value={3}>3</option>
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-white text-sm mt-4">
-            <thead className="bg-emerald-700">
-              <tr>
-                <th className="p-2 text-center">Name</th>
-                <th className="p-2 text-center">Email</th>
-                <th className="p-2 text-center">RoleId</th>
-                <th className="p-2 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="text-center p-4 text-red-500">
-                    No Data Found
-                  </td>
-                </tr>
-              ) : (
-                list.map((item, i) => (
-                  <tr key={i} className="border-b border-emerald-400 text-center">
-                    <td className="p-2">{item.name}</td>
-                    <td className="p-2">{item.email}</td>
-                    <td className="p-2">{item.roleId}</td>
-                    <td className="p-2 flex justify-center">
-                      <Trash
-                        size={18}
-                        className="text-red-400 cursor-pointer hover:text-red-600"
-                        onClick={() => handleDelete(item._id)}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+              size="small"
+            >
+              <MenuItem value={3}>3</MenuItem>
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+            </Select>
+          </Box>
+
+          <TableContainer>
+            <Table>
+              <TableHead sx={{ background: "linear-gradient(177deg, #ecfdf1, #065f35)" }}>
+                <TableRow>
+                  <TableCell align="center" sx={{ fontWeight: "bold" }}>Name</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: "bold" }}>Email</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: "bold" }}>RoleId</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: "bold" }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {list.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ color: "red" }}>
+                      No Data Found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  list.map((item) => (
+                    <TableRow key={item._id}>
+                      <TableCell align="center">{item.name}</TableCell>
+                      <TableCell align="center">{item.email}</TableCell>
+                      <TableCell align="center">{item.roleId}</TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="error"
+                          onClick={() => setDeleteId(item._id)}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Grid>
+
+      {/* DELETE CONFIRM DIALOG */}
+      <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this role?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+          <Button color="error" onClick={handleDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

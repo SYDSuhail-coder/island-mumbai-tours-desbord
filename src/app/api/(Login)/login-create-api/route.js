@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req) {
     const formData = await req.formData();
-    console.log("formData:", Object.fromEntries(formData))
+    // console.log("formData:", Object.fromEntries(formData))
     const response = await fetch(`${process.env.Login_Create_Api}`, {
         method: 'POST',
         headers: {
