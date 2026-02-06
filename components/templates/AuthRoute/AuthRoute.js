@@ -5,21 +5,20 @@ import SideBar from '../../templates/SideBaar/SideBaar'
 import FrontPage from '../../templates/FrontPage/FrontPage'
 import dynamic from "next/dynamic";
 
-
 const AuthSidebar = ({ children }) => {
     const loginDetails = useSelector((state) => state.login.isLogin)
     //  console.log(loginDetails);
-     
+
     return (
         <>
-            {/* {loginDetails ? ( */}
+            {loginDetails ? (
                 <SideBar>
                     {children}
                 </SideBar>
 
-            {/* ) : (
+            ) : (
                 <FrontPage />
-            )} */}
+            )}
         </>
     );
 }

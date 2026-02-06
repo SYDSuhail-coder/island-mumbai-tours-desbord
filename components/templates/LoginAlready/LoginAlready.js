@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useDispatch } from 'react-redux';
 import axios from "axios";
-import { deleteModules, getModules } from '../reduxForLogin/action';
+import { deleteModules, getModules, logout } from '../reduxForLogin/action';
 import { useRouter } from "next/navigation";
 const LoginAlready = () => {
   const [userName, setuserName] = useState("");
@@ -20,40 +20,31 @@ const LoginAlready = () => {
       setError("Password must be exactly 6 characters long.");
       return;
     }
+    const formData = new FormData();
+    formData.append("userName", userName);
+    formData.append("password", password);
 
-    try {
-      const formData = new FormData();
-      formData.append("userName", userName);
-      formData.append("password", password);
+    const res = await axios.post("/api/loginAlready", formData);
+    if (res.data.statusCode !== 200) {
+      setError("Invalid userName or password");
+      return;
+    }
+    const { userInfo, roleInfo } = res.data;
 
-      const res = await axios.post("/api/loginAlready", formData);
-      if (res.data.statusCode !== 200) {
-        setError("Invalid userName or password");
-        return;
-      }
-      const { userInfo, roleInfo } = res.data;
-
-      dispatch(deleteModules());
-      dispatch(
-        getModules({
-          userId: userInfo._id,
-          userName: userInfo.userName,
-          roleInfo: roleInfo,
-          isLogin: true,
-        })
-      );
-      const loggedInUserName = userInfo.userName;
-      if (loggedInUserName === "suhail@123") {
-        router.push("/dashboard");
-      } else if (loggedInUserName === "saiyadsuhail@123") {
-        router.push("/createLoginPageId");
-      } else {
-        router.push("/liveImage");
-      }
-
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Something went wrong. Please try again.");
+    dispatch(deleteModules());
+    dispatch(
+      getModules({
+        userId: userInfo._id,
+        userName: userInfo.userName,
+        roleInfo: roleInfo,
+        isLogin: true,
+      })
+    );
+    const loggedInUserName = userInfo.userName;
+    if (loggedInUserName === "admin") {
+      router.push("/dashboard");
+    } else {
+      router.push("/addUsers");
     }
   };
 
