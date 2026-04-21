@@ -1,17 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
     const formData = await req.formData();
-    // console.log("formData:", Object.fromEntries(formData))
-    const response = await fetch(`${process.env.Login_Page_Api}`, {
-        method: 'POST',
+    const response = await fetch(process.env.LOGIN_PAGE_API, {
+        method: "POST",
         headers: {
-            // 'x-api-key': 'pIFmUW8YJw9HFk9Z4R1wA7fEbNjYc7EUaRLFopZ0',
-
+            'x-api-key': 'IsMuTo@2026Xk9$mQ3zP!rL7vN',
         },
         body: formData,
     });
 
     const data = await response.json();
-    return NextResponse.json(data)
+    return NextResponse.json(data);
 }
