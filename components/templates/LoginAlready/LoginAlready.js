@@ -1,15 +1,17 @@
 "use client";
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useDispatch } from 'react-redux';
 import axios from "axios";
-import { deleteModules, getModules, logout } from '../reduxForLogin/action';
+import { deleteModules, getModules } from '../reduxForLogin/action';
 import { useRouter } from "next/navigation";
+
 const LoginAlready = () => {
   const [userName, setuserName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -20,31 +22,38 @@ const LoginAlready = () => {
       setError("Password must be exactly 6 characters long.");
       return;
     }
-    const formData = new FormData();
-    formData.append("userName", userName);
-    formData.append("password", password);
 
-    const res = await axios.post("/api/loginAlready", formData);
-    if (res.data.statusCode !== 200) {
-      setError("Invalid userName or password");
-      return;
-    }
-    const { userInfo, roleInfo } = res.data;
+    setLoading(true); // ✅ loader start
 
-    dispatch(deleteModules());
-    dispatch(
-      getModules({
+    try {
+      const formData = new FormData();
+      formData.append("userName", userName);
+      formData.append("password", password);
+
+      const res = await axios.post("/api/loginAlready", formData);
+      if (res.data.statusCode !== 200) {
+        setError("Invalid userName or password");
+        return;
+      }
+      const { userInfo, roleInfo } = res.data;
+      dispatch(deleteModules());
+      dispatch(getModules({
         userId: userInfo._id,
         userName: userInfo.userName,
         roleInfo: roleInfo,
         isLogin: true,
-      })
-    );
-    const loggedInUserName = userInfo.userName;
-    if (loggedInUserName === "admin") {
-      router.push("/dashboard");
-    } else {
-      router.push("/addUsers");
+      }));
+
+      if (userInfo.userName === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/addUsers");
+      }
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    } finally {
+       await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoading(false);
     }
   };
 
@@ -74,25 +83,25 @@ const LoginAlready = () => {
               userName Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 h-5 w-5  text-white" />
+              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-white" />
               <input
                 type="userName"
                 required
                 value={userName}
                 onChange={(e) => setuserName(e.target.value)}
                 placeholder="Enter your userName"
-                className="w-full pl-10 pr-4 py-2 border border-emerald-200 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none  text-white"
+                className="w-full pl-10 pr-4 py-2 border border-emerald-200 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none text-white"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium  text-white mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
               Password (6 Characters)
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 h-5 w-5  text-white" />
+              <Lock className="absolute left-3 top-2.5 h-5 w-5 text-white" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
@@ -100,24 +109,35 @@ const LoginAlready = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 maxLength={6}
                 placeholder="••••••"
-                className="w-full pl-10 pr-10 py-2 border border-emerald-200 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none  text-white"
+                className="w-full pl-10 pr-10 py-2 border border-emerald-200 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none text-white"
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 cursor-pointer  text-white"
+                className="absolute right-3 top-2.5 cursor-pointer text-white"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
             </div>
           </div>
+
           {error && (
             <p className="text-red-500 text-sm text-center">{error}</p>
           )}
+
+          {/* ✅ Loader Button */}
           <button
             type="submit"
-            className="w-full py-3 rounded-md bg-green-300 text-black font-semibold shadow-md hover:bg-green-400 transition"
+            disabled={loading}
+            className="w-full py-3 rounded-md bg-green-300 text-black font-semibold shadow-md hover:bg-green-400 transition flex items-center justify-center gap-2"
           >
-            Sign Up
+            {loading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Please wait...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>
