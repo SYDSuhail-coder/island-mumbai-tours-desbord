@@ -27,13 +27,10 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// import { Button } from "@mui/material";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { deleteModules } from "../reduxForLogin/action";
 import { usePathname } from "next/navigation";
-
-
 
 const drawerWidth = 240;
 export default function SideBaar(props) {
@@ -52,21 +49,13 @@ export default function SideBaar(props) {
     router.push("/login");
   };
 
-
   const [open1, setOpen1] = React.useState(false);
   const [open2, setOpen2] = React.useState(false);
   const [open3, setOpen3] = React.useState(false);
 
-  const handleClick1 = () => {
-    setOpen1(!open1);
-  };
-  const handleClick2 = () => {
-    setOpen2(!open2);
-  };
-
-  const handleClick3 = () => {
-    setOpen3(!open3);
-  };
+  const handleClick1 = () => { setOpen1(!open1); };
+  const handleClick2 = () => { setOpen2(!open2); };
+  const handleClick3 = () => { setOpen3(!open3); };
 
   const [Dashboard, setDashboard] = useState({
     id: 0, allowed: false,
@@ -81,37 +70,49 @@ export default function SideBaar(props) {
     pages: [
       { id: 0, allowed: false }
     ]
-  })
+  });
 
   useEffect(() => {
-    setDashboard({
-      id: loginDetails.roleInfo.modules[0].id,
-      allowed: loginDetails.roleInfo.modules[0].allowed,
-      pages: [{
-        id: loginDetails.roleInfo.modules[0].pages[0].id,
-        allowed: loginDetails.roleInfo.modules[0].pages[0].allowed
-      },
-      {
-        id: loginDetails.roleInfo.modules[0].pages[1].id,
-        allowed: loginDetails.roleInfo.modules[0].pages[1].allowed
-      }]
-    }),
-      setUsers({
-        id: loginDetails.roleInfo.modules[1].id,
-        allowed: loginDetails.roleInfo.modules[1].allowed,
-        pages: [{
-          id: loginDetails.roleInfo.modules[1].pages[0].id,
-          allowed: loginDetails.roleInfo.modules[1].pages[0].allowed
-        }]
-      })
-  }, [])
+    const modules = loginDetails?.roleInfo?.modules;
+    if (!modules) return;
 
+    // id se dhundo — index se nahi
+    const dashboardModule = modules.find(m => m.id === 390600);
+    const usersModule = modules.find(m => m.id === 500001);
+
+    if (dashboardModule) {
+      setDashboard({
+        id: dashboardModule.id,
+        allowed: dashboardModule.allowed,
+        pages: [
+          {
+            id: dashboardModule.pages[0]?.id || 0,
+            allowed: dashboardModule.pages[0]?.allowed || false
+          },
+          {
+            id: dashboardModule.pages[1]?.id || 0,
+            allowed: dashboardModule.pages[1]?.allowed || false
+          }
+        ]
+      });
+    }
+
+    if (usersModule) {
+      setUsers({
+        id: usersModule.id,
+        allowed: usersModule.allowed,
+        pages: [{
+          id: usersModule.pages[0]?.id || 0,
+          allowed: usersModule.pages[0]?.allowed || false
+        }]
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (pathname === "/dashboard" || pathname === "/reports") { setOpen1(true); }
     if (pathname === "/addUsers") { setOpen2(true); }
   }, [pathname]);
-
 
   const drawer = (
     <Box
@@ -121,10 +122,6 @@ export default function SideBaar(props) {
         background: "linear-gradient(177deg, #ecfdf1, #065f35)",
       }}
     >
-      {/* <Typography variant="h6" sx={{ p: 2 }}>
-         Dashboard
-      </Typography> */}
-
       {Dashboard.id == 390600 && Dashboard.allowed == true ? (
         <List>
           <ListItemButton onClick={handleClick1} sx={{ color: "black" }}>
@@ -135,21 +132,16 @@ export default function SideBaar(props) {
             {open1 ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={open1} timeout="auto" unmountOnExit>
-            {Dashboard?.pages[0].id == 966260 &&
-              Dashboard?.pages[0].allowed == true ? (
-              // <ListItemButton component={Link} href="/dashboard" sx={{ pl: 4 }}>
+            {Dashboard?.pages[0].id == 966260 && Dashboard?.pages[0].allowed == true ? (
               <ListItemButton
                 component={Link}
                 href="/dashboard"
                 sx={{
-                  backgroundColor: isActive("/dashboard")
-                    ? "rgba(6,95,70,0.1)"
-                    : "transparent",
+                  backgroundColor: isActive("/dashboard") ? "rgba(6,95,70,0.1)" : "transparent",
                   textAlign: "left",
                   marginLeft: "12px",
                 }}
               >
-
                 <ListItemIcon>
                   <DashboardIcon sx={{ color: "success" }} />
                 </ListItemIcon>
@@ -160,24 +152,19 @@ export default function SideBaar(props) {
             )}
 
             {Dashboard?.pages[1].id == 966261 && Dashboard?.pages[1].allowed == true ? (
-              // <ListItemButton sx={{ pl: 4 }} component={Link} href="/reports">
               <ListItemButton
                 component={Link}
                 href="/reports"
                 sx={{
-                  backgroundColor: isActive("/reports")
-                    ? "rgba(6,95,70,0.1)"
-                    : "transparent",
+                  backgroundColor: isActive("/reports") ? "rgba(6,95,70,0.1)" : "transparent",
                   textAlign: "left",
                   marginLeft: "12px",
-                }}>
+                }}
+              >
                 <ListItemIcon>
                   <ProductionQuantityLimitsOutlinedIcon sx={{ color: "success" }} />
                 </ListItemIcon>
-                <ListItemText
-                  primary="reports"
-                  sx={{ color: "ProductionQuantityLimitsOutlinedIcon" }}
-                />
+                <ListItemText primary="reports" sx={{ color: "ProductionQuantityLimitsOutlinedIcon" }} />
               </ListItemButton>
             ) : (
               <></>
@@ -195,16 +182,13 @@ export default function SideBaar(props) {
               <LoginOutlinedIcon sx={{ color: "black" }} />
             </ListItemIcon>
             <ListItemText primary="Users Group" sx={{ color: "black" }} />
-            {open1 ? <ExpandLess /> : <ExpandMore />}
+            {open2 ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={open2} timeout="auto" unmountOnExit>
             {Users?.pages[0].id == 500002 && Users?.pages[0].allowed == true ?
-              // <ListItemButton sx={{ pl: 4 }} component={Link} href="/addUsers">
               <ListItemButton
                 sx={{
-                  backgroundColor: isActive("/addUsers")
-                    ? "rgba(0,128,0,0.1)"
-                    : "transparent",
+                  backgroundColor: isActive("/addUsers") ? "rgba(0,128,0,0.1)" : "transparent",
                   textAlign: "left",
                   marginLeft: "12px",
                 }}
@@ -223,8 +207,7 @@ export default function SideBaar(props) {
     </Box>
   );
 
-  const container =
-    window !== undefined ? () => window().document.body : undefined;
+  const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -254,7 +237,6 @@ export default function SideBaar(props) {
         </Toolbar>
       </AppBar>
 
-      {/* DRAWER */}
       <Box component="nav" sx={{ width: { sm: drawerWidth } }}>
         <Drawer
           container={container}
@@ -263,9 +245,7 @@ export default function SideBaar(props) {
           onClose={handleDrawerToggle}
           sx={{
             display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-            },
+            "& .MuiDrawer-paper": { width: drawerWidth },
           }}
         >
           {drawer}
@@ -273,18 +253,15 @@ export default function SideBaar(props) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: "none", sm: "block", },
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-
-            },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": { width: drawerWidth },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
-      {/* PAGE CONTENT */}
+
       <Box
         component="main"
         sx={{
@@ -295,10 +272,8 @@ export default function SideBaar(props) {
       >
         <Toolbar />
         <div>{props.children}</div>
-
       </Box>
     </Box>
   );
 }
-
 

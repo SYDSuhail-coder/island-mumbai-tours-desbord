@@ -23,7 +23,7 @@ const LoginAlready = () => {
       return;
     }
 
-    setLoading(true); // ✅ loader start
+    setLoading(true);
 
     try {
       const formData = new FormData();
@@ -44,19 +44,25 @@ const LoginAlready = () => {
         isLogin: true,
       }));
 
-      if (userInfo.userName === "admin") {
+      // role_name se redirect karo
+      if (roleInfo.role_name === "admin") {
         router.push("/dashboard");
-      } else {
+      } else if (roleInfo.role_name === "manager") {
         router.push("/addUsers");
+      } else {
+        // fallback — pehla allowed page
+        const firstAllowedModule = roleInfo.modules.find(m => m.allowed === true);
+        const firstAllowedPage = firstAllowedModule?.pages.find(p => p.allowed === true);
+        router.push(`/${firstAllowedPage?.name}`);
       }
+
     } catch (err) {
       setError("Something went wrong. Try again.");
     } finally {
-       await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setLoading(false);
     }
   };
-
   return (
     <section
       style={{
