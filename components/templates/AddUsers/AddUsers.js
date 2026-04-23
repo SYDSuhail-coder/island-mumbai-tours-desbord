@@ -2,7 +2,7 @@ import React from 'react'
 
 const AddUsers = () => {
   return (
-    <div>AddUsers</div>
+    <div style={{color:"white"}}>AddUsers</div>
   )
 }
 
