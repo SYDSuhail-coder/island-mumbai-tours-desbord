@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
-const PopularIsland = () => {
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+const EditIsland = ({ slug }) => {
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -21,8 +27,55 @@ const PopularIsland = () => {
     images: [],
   });
 
-  const [coverPreview, setCoverPreview] = useState(null);
-  const [galleryPreviews, setGalleryPreviews] = useState([]);
+  // Existing images from server (URLs)
+  const [coverPreview, setCoverPreview] = useState(null);   
+  const [coverIsNew, setCoverIsNew] = useState(false);         
+  const [existingGallery, setExistingGallery] = useState([]);  
+  const [newGalleryFiles, setNewGalleryFiles] = useState([]);   // new File objects
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState([]); // blob URLs for new files
+
+  // ── Fetch existing tour data
+  useEffect(() => {
+    if (!slug) return;
+    const fetchTour = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `http://localhost:1001/v1/service/getMumbaiPrivateTourById/${slug}`,
+          { headers: { "x-api-key": "IsMuTo@2026Xk9$mQ3zP!rL7vN" } }
+        );
+        const json = await res.json();
+        const tour = json?.result?.data || json?.result || json?.data || json;
+
+        setFormData({
+          title: tour.title || "",
+          description: tour.description || "",
+          duration: tour.duration || "",
+          transport: tour.transport || "",
+          location: tour.location || "",
+          maxGuests: tour.maxGuests || "",
+          pricePerPerson: tour.pricePerPerson || "",
+          child: tour.child || "",
+          freeCancellation: tour.freeCancellation ?? true,
+          rating: tour.rating || "",
+          reviewsCount: tour.reviewsCount || "",
+          badge: tour.badge || "",
+          isActive: tour.isActive ?? true,
+          coverImage: null,
+          images: [],
+        });
+
+        if (tour.coverImage) setCoverPreview(tour.coverImage);
+        if (Array.isArray(tour.images)) setExistingGallery(tour.images);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        alert("Failed to load tour data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTour();
+  }, [slug]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -32,55 +85,104 @@ const PopularIsland = () => {
     }));
   };
 
+  // Cover image — new file picked
   const handleCoverImage = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setFormData((prev) => ({ ...prev, coverImage: file }));
-    if (file) setCoverPreview(URL.createObjectURL(file));
+    setCoverPreview(URL.createObjectURL(file));
+    setCoverIsNew(true);
   };
 
   const removeCoverImage = () => {
     setFormData((prev) => ({ ...prev, coverImage: null }));
     setCoverPreview(null);
+    setCoverIsNew(false);
   };
 
-  const handleImages = (e) => {
+  // Gallery — remove existing server image
+  const removeExistingGallery = (index) => {
+    setExistingGallery((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Gallery — add new files
+  const handleNewImages = (e) => {
     const files = Array.from(e.target.files);
-    setFormData((prev) => ({ ...prev, images: [...prev.images, ...files] }));
-    setGalleryPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    setNewGalleryFiles((prev) => [...prev, ...files]);
+    setNewGalleryPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
   };
 
-  const removeGalleryImage = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  // Gallery — remove new (not yet uploaded) file
+  const removeNewGallery = (index) => {
+    setNewGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ── Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     const data = new FormData();
-    Object.entries(formData).forEach(([key, val]) => {
-      if (key === "images") {
-        val.forEach((img) => data.append("images", img));
-      } else if (key === "coverImage") {
-        if (val) {
-          data.append("coverImage", val);
-        }
-      } else {
-        data.append(key, val);
-      }
-    });
+
+    // Text fields
+    const textFields = [
+      "title","description","duration","transport","location",
+      "maxGuests","pricePerPerson","child","rating","reviewsCount","badge",
+    ];
+    textFields.forEach((key) => data.append(key, formData[key]));
+    data.append("freeCancellation", formData.freeCancellation);
+    data.append("isActive", formData.isActive);
+
+    // Cover image — only if new file picked
+    if (formData.coverImage) data.append("coverImage", formData.coverImage);
+
+    // Existing gallery URLs (so server knows which to keep)
+    existingGallery.forEach((url) => data.append("existingImages", url));
+
+    // New gallery files
+    newGalleryFiles.forEach((file) => data.append("images", file));
 
     try {
-      const response = await axios.post("/api/create-island-page", data);
-      console.log(response.data);
-      alert("Tour Added Successfully");
+      const res = await fetch(
+        `http://localhost:1001/v1/service/updateMumbaiPrivateTourById/${slug}`,
+        {
+          method: "PUT",
+          headers: { "x-api-key": "IsMuTo@2026Xk9$mQ3zP!rL7vN" },
+          body: data,
+        }
+      );
+      const result = await res.json();
+      console.log(result);
+      alert("Tour Updated Successfully");
+      router.push("/listIsland");
     } catch (error) {
-      console.log(error);
+      console.error(error);
       alert("Something went wrong");
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
+          .pi-root { min-height:100vh; background:#fdf8f2; display:flex; align-items:center; justify-content:center; font-family:'Outfit',sans-serif; }
+          .pi-loader { text-align:center; }
+          .pi-spinner { width:40px; height:40px; border:3px solid #fde68a; border-top-color:#d97706; border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 16px; }
+          .pi-loader-text { color:#92400e; font-size:14px; font-weight:500; }
+          @keyframes spin { to { transform:rotate(360deg); } }
+        `}</style>
+        <div className="pi-root">
+          <div className="pi-loader">
+            <div className="pi-spinner" />
+            <div className="pi-loader-text">Loading tour data...</div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -137,12 +239,34 @@ const PopularIsland = () => {
           box-shadow: 0 2px 8px rgba(245,158,11,0.3);
         }
 
+        .pi-badge-edit {
+          background: linear-gradient(135deg, #0369a1, #0ea5e9);
+          color: #fff;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          padding: 5px 13px;
+          border-radius: 100px;
+          box-shadow: 0 2px 8px rgba(14,165,233,0.3);
+        }
+
         .pi-title {
           font-family: 'Cormorant Garamond', serif;
           font-size: 30px;
           color: #1c1408;
           font-weight: 700;
           letter-spacing: -0.01em;
+        }
+
+        .pi-slug {
+          font-size: 12px;
+          color: #b45309;
+          background: #fef3c7;
+          border-radius: 6px;
+          padding: 3px 10px;
+          margin-left: auto;
+          font-family: 'Outfit', monospace;
         }
 
         .pi-section-label {
@@ -224,7 +348,6 @@ const PopularIsland = () => {
         }
         .pi-textarea::placeholder { color: #b8ad9e; }
 
-        /* Toggles */
         .pi-toggles {
           display: flex;
           gap: 24px;
@@ -262,12 +385,8 @@ const PopularIsland = () => {
           transition: transform 0.25s;
           box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
-        .pi-toggle input:checked + .pi-switch {
-          background: #f59e0b;
-        }
-        .pi-toggle input:checked + .pi-switch::after {
-          transform: translateX(18px);
-        }
+        .pi-toggle input:checked + .pi-switch { background: #f59e0b; }
+        .pi-toggle input:checked + .pi-switch::after { transform: translateX(18px); }
 
         .pi-toggle-text {
           font-size: 13px;
@@ -275,7 +394,6 @@ const PopularIsland = () => {
           color: #4b3a1f;
         }
 
-        /* Upload areas */
         .pi-upload-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -298,6 +416,7 @@ const PopularIsland = () => {
           align-items: center;
           justify-content: center;
           background: #fdf8f0;
+          overflow: hidden;
         }
         .pi-upload-box:hover {
           border-color: #f59e0b;
@@ -314,19 +433,10 @@ const PopularIsland = () => {
         }
 
         .pi-upload-inner { pointer-events: none; }
-
         .pi-upload-icon { font-size: 26px; margin-bottom: 6px; }
-
-        .pi-upload-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: #3d2c0e;
-          margin-bottom: 3px;
-        }
-
+        .pi-upload-title { font-size: 13px; font-weight: 600; color: #3d2c0e; margin-bottom: 3px; }
         .pi-upload-sub { font-size: 11px; color: #a8956d; }
 
-        /* Image grid previews */
         .pi-images-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -347,6 +457,10 @@ const PopularIsland = () => {
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        .pi-img-thumb-wrap.existing {
+          border-color: #fbbf24;
         }
 
         .pi-img-remove {
@@ -377,9 +491,22 @@ const PopularIsland = () => {
           margin-top: 4px;
         }
 
-        /* Submit */
+        .pi-gallery-label {
+          font-size: 10px;
+          font-weight: 600;
+          color: #b45309;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .pi-actions {
+          display: flex;
+          gap: 12px;
+        }
+
         .pi-submit {
-          width: 100%;
+          flex: 1;
           padding: 16px;
           background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
           border: none;
@@ -393,26 +520,41 @@ const PopularIsland = () => {
           transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
           box-shadow: 0 4px 20px rgba(217,119,6,0.3);
         }
-        .pi-submit:hover {
-          opacity: 0.94;
-          transform: translateY(-1px);
-          box-shadow: 0 6px 28px rgba(217,119,6,0.4);
-        }
+        .pi-submit:hover { opacity: 0.94; transform: translateY(-1px); box-shadow: 0 6px 28px rgba(217,119,6,0.4); }
         .pi-submit:active { transform: translateY(0); }
+        .pi-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .pi-cancel {
+          padding: 16px 28px;
+          background: transparent;
+          border: 1.5px solid #e5d9c3;
+          border-radius: 12px;
+          color: #78350f;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s;
+        }
+        .pi-cancel:hover { background: #fef3c7; border-color: #fbbf24; }
 
         @media (max-width: 640px) {
           .pi-card { padding: 28px 18px 36px; }
           .pi-grid, .pi-upload-grid { grid-template-columns: 1fr; }
           .pi-toggles { flex-direction: column; gap: 16px; }
+          .pi-actions { flex-direction: column; }
         }
       `}</style>
 
       <div className="pi-root">
         <div className="pi-card">
+
           {/* Header */}
           <div className="pi-header">
             <span className="pi-badge">Mumbai Tours</span>
-            <h1 className="pi-title">Add Private Tour</h1>
+            <h1 className="pi-title">Edit Tour</h1>
+            <span className="pi-badge-edit">Editing</span>
+            <span className="pi-slug">{slug}</span>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -479,7 +621,7 @@ const PopularIsland = () => {
               </div>
             </div>
 
-            {/* Toggles */}
+            {/* Settings */}
             <div className="pi-section-label">Settings</div>
             <div className="pi-toggles" style={{ marginBottom: 32 }}>
               <label className="pi-toggle">
@@ -498,17 +640,21 @@ const PopularIsland = () => {
             <div className="pi-section-label">Images</div>
             <div className="pi-upload-grid">
 
-              {/* Cover Image — single */}
+              {/* Cover Image */}
               <div className="pi-upload-section">
                 <div className="pi-upload-box">
                   <input type="file" accept="image/*" onChange={handleCoverImage} />
                   {coverPreview ? (
                     <>
-                      <img src={coverPreview} alt="Cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 13, opacity: 0.85 }} />
+                      <img
+                        src={coverPreview}
+                        alt="Cover"
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: 13, opacity: 0.85 }}
+                      />
                       <button
                         type="button"
                         className="pi-img-remove"
-                        style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}
+                        style={{ position: "absolute", top: 8, right: 8, zIndex: 3 }}
                         onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}
                       >✕</button>
                     </>
@@ -516,44 +662,77 @@ const PopularIsland = () => {
                     <div className="pi-upload-inner">
                       <div className="pi-upload-icon">🖼️</div>
                       <div className="pi-upload-title">Cover Image</div>
-                      <div className="pi-upload-sub">Click to upload</div>
+                      <div className="pi-upload-sub">Click to replace</div>
                     </div>
                   )}
                 </div>
+                {coverIsNew && <div className="pi-img-count">✦ New cover selected</div>}
               </div>
 
               {/* Gallery Images */}
               <div className="pi-upload-section">
                 <div className="pi-upload-box">
-                  <input type="file" accept="image/*" multiple onChange={handleImages} />
+                  <input type="file" accept="image/*" multiple onChange={handleNewImages} />
                   <div className="pi-upload-inner">
                     <div className="pi-upload-icon">📷</div>
-                    <div className="pi-upload-title">Gallery Images</div>
+                    <div className="pi-upload-title">Add More Photos</div>
                     <div className="pi-upload-sub">Select multiple photos</div>
                   </div>
                 </div>
-                {galleryPreviews.length > 0 && (
+
+                {/* Existing gallery */}
+                {existingGallery.length > 0 && (
                   <>
+                    <div className="pi-gallery-label">Current Photos</div>
                     <div className="pi-images-grid">
-                      {galleryPreviews.map((src, i) => (
-                        <div key={i} className="pi-img-thumb-wrap">
-                          <img src={src} alt={`Gallery ${i + 1}`} />
+                      {existingGallery.map((src, i) => (
+                        <div key={i} className="pi-img-thumb-wrap existing">
+                          <img src={src} alt={`Existing ${i + 1}`} />
                           <button
                             type="button"
                             className="pi-img-remove"
-                            onClick={() => removeGalleryImage(i)}
+                            onClick={() => removeExistingGallery(i)}
                           >✕</button>
                         </div>
                       ))}
                     </div>
-                    <div className="pi-img-count">{galleryPreviews.length} gallery image(s)</div>
+                    <div className="pi-img-count">{existingGallery.length} existing photo(s)</div>
+                  </>
+                )}
+
+                {/* New gallery files */}
+                {newGalleryPreviews.length > 0 && (
+                  <>
+                    <div className="pi-gallery-label" style={{ marginTop: 10 }}>New Photos</div>
+                    <div className="pi-images-grid">
+                      {newGalleryPreviews.map((src, i) => (
+                        <div key={i} className="pi-img-thumb-wrap">
+                          <img src={src} alt={`New ${i + 1}`} />
+                          <button
+                            type="button"
+                            className="pi-img-remove"
+                            onClick={() => removeNewGallery(i)}
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pi-img-count">{newGalleryPreviews.length} new photo(s) to upload</div>
                   </>
                 )}
               </div>
 
             </div>
 
-            <button type="submit" className="pi-submit">Add Tour →</button>
+            {/* Actions */}
+            <div className="pi-actions">
+              <button type="button" className="pi-cancel" onClick={() => router.push("/listIsland")}>
+                ← Cancel
+              </button>
+              <button type="submit" className="pi-submit" disabled={saving}>
+                {saving ? "Saving..." : "Update Tour →"}
+              </button>
+            </div>
+
           </form>
         </div>
       </div>
@@ -561,4 +740,4 @@ const PopularIsland = () => {
   );
 };
 
-export default PopularIsland;
+export default EditIsland;
