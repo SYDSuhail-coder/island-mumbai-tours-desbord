@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const EditIsland = ({ slug }) => {
   const router = useRouter();
@@ -28,54 +30,64 @@ const EditIsland = ({ slug }) => {
   });
 
   // Existing images from server (URLs)
-  const [coverPreview, setCoverPreview] = useState(null);   
-  const [coverIsNew, setCoverIsNew] = useState(false);         
-  const [existingGallery, setExistingGallery] = useState([]);  
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [coverIsNew, setCoverIsNew] = useState(false);
+  const [existingGallery, setExistingGallery] = useState([]);
   const [newGalleryFiles, setNewGalleryFiles] = useState([]);   // new File objects
-  const [newGalleryPreviews, setNewGalleryPreviews] = useState([]); // blob URLs for new files
-
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
   // ── Fetch existing tour data
   useEffect(() => {
     if (!slug) return;
-    const fetchTour = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `http://localhost:1001/v1/service/getMumbaiPrivateTourById/${slug}`,
-          { headers: { "x-api-key": "IsMuTo@2026Xk9$mQ3zP!rL7vN" } }
-        );
-        const json = await res.json();
-        const tour = json?.result?.data || json?.result || json?.data || json;
-
-        setFormData({
-          title: tour.title || "",
-          description: tour.description || "",
-          duration: tour.duration || "",
-          transport: tour.transport || "",
-          location: tour.location || "",
-          maxGuests: tour.maxGuests || "",
-          pricePerPerson: tour.pricePerPerson || "",
-          child: tour.child || "",
-          freeCancellation: tour.freeCancellation ?? true,
-          rating: tour.rating || "",
-          reviewsCount: tour.reviewsCount || "",
-          badge: tour.badge || "",
-          isActive: tour.isActive ?? true,
-          coverImage: null,
-          images: [],
-        });
-
-        if (tour.coverImage) setCoverPreview(tour.coverImage);
-        if (Array.isArray(tour.images)) setExistingGallery(tour.images);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Failed to load tour data");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTour();
   }, [slug]);
+
+  const fetchTour = async () => {
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/get-by-slug-island-page/${slug}`);
+      const json = await res.json();
+      const tour =
+        json?.result?.data ||
+        json?.result ||
+        json?.data ||
+        json;
+
+      setFormData({
+        title: tour.title || "",
+        description: tour.description || "",
+        duration: tour.duration || "",
+        transport: tour.transport || "",
+        location: tour.location || "",
+        maxGuests: tour.maxGuests || "",
+        pricePerPerson: tour.pricePerPerson || "",
+        child: tour.child || "",
+        freeCancellation: tour.freeCancellation ?? true,
+        rating: tour.rating || "",
+        reviewsCount: tour.reviewsCount || "",
+        badge: tour.badge || "",
+        isActive: tour.isActive ?? true,
+        coverImage: null,
+        images: [],
+      });
+
+      // Cover Image
+      if (tour.coverImage) {
+        setCoverPreview(tour.coverImage);
+      }
+
+      // Existing Gallery
+      if (Array.isArray(tour.images)) {
+        setExistingGallery(tour.images);
+      }
+
+    } catch (err) {
+      console.log("Fetch Error", err);
+      toast.error("Failed to load tour data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -124,68 +136,57 @@ const EditIsland = ({ slug }) => {
     setSaving(true);
     const data = new FormData();
 
-    // Text fields
     const textFields = [
-      "title","description","duration","transport","location",
-      "maxGuests","pricePerPerson","child","rating","reviewsCount","badge",
+      "title", "description", "duration", "transport", "location",
+      "maxGuests", "pricePerPerson", "child", "rating", "reviewsCount", "badge",
     ];
     textFields.forEach((key) => data.append(key, formData[key]));
     data.append("freeCancellation", formData.freeCancellation);
     data.append("isActive", formData.isActive);
 
-    // Cover image — only if new file picked
-    if (formData.coverImage) data.append("coverImage", formData.coverImage);
+    // ✅ Cover image fix
+    if (formData.coverImage) {
+      data.append("coverImage", formData.coverImage);  // nai file
+    } else if (coverPreview) {
+      data.append("coverImage", coverPreview);  // purana URL
+    }
 
-    // Existing gallery URLs (so server knows which to keep)
+    // Existing gallery URLs
     existingGallery.forEach((url) => data.append("existingImages", url));
 
     // New gallery files
     newGalleryFiles.forEach((file) => data.append("images", file));
 
     try {
-      const res = await fetch(
-        `http://localhost:1001/v1/service/updateMumbaiPrivateTourById/${slug}`,
-        {
-          method: "PUT",
-          headers: { "x-api-key": "IsMuTo@2026Xk9$mQ3zP!rL7vN" },
-          body: data,
-        }
-      );
+      const res = await fetch(`/api/upadete-island-page/${slug}`, {
+        method: "PUT",
+        body: data,
+      });
+
       const result = await res.json();
-      console.log(result);
-      alert("Tour Updated Successfully");
+      console.log("Update response:", result);
+
+      if (result?.statusCode === 400) {
+        toast.error(result?.message || "Update failed");
+        setSaving(false);
+        return;
+      }
+
+      toast.success("Tour Updated Successfully");
       router.push("/listIsland");
+
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong");
+      console.error("Update error:", error);
+      toast.error("Something went wrong");
+
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
-          .pi-root { min-height:100vh; background:#fdf8f2; display:flex; align-items:center; justify-content:center; font-family:'Outfit',sans-serif; }
-          .pi-loader { text-align:center; }
-          .pi-spinner { width:40px; height:40px; border:3px solid #fde68a; border-top-color:#d97706; border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 16px; }
-          .pi-loader-text { color:#92400e; font-size:14px; font-weight:500; }
-          @keyframes spin { to { transform:rotate(360deg); } }
-        `}</style>
-        <div className="pi-root">
-          <div className="pi-loader">
-            <div className="pi-spinner" />
-            <div className="pi-loader-text">Loading tour data...</div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
 

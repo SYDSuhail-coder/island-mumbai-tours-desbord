@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const PopularIsland = () => {
   const [formData, setFormData] = useState({
     title: "",
@@ -23,6 +26,8 @@ const PopularIsland = () => {
 
   const [coverPreview, setCoverPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -57,33 +62,73 @@ const PopularIsland = () => {
     setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
+    const requiredFields = [
+      "title",
+      "description",
+      "duration",
+      "transport",
+      "location",
+      "maxGuests",
+      "pricePerPerson",
+      "child",
+      "rating",
+      "reviewsCount",
+      "badge",
+    ];
+
+    const hasEmptyField = requiredFields.some((field) => !formData[field]);
+    if (hasEmptyField || !formData.coverImage || formData.images.length === 0) {
+      toast.warning("Please fill all fields");
+      setSubmitting(false);
+      return;
+    }
+
     const data = new FormData();
-    Object.entries(formData).forEach(([key, val]) => {
-      if (key === "images") {
-        val.forEach((img) => data.append("images", img));
-      } else if (key === "coverImage") {
-        if (val) {
-          data.append("coverImage", val);
-        }
-      } else {
-        data.append(key, val);
-      }
-    });
+    requiredFields.forEach((key) => data.append(key, formData[key]));
+    data.append("freeCancellation", formData.freeCancellation);
+    data.append("isActive", formData.isActive);
+    data.append("coverImage", formData.coverImage);
+    formData.images.forEach((img) => data.append("images", img));
 
     try {
       const response = await axios.post("/api/create-island-page", data);
-      console.log(response.data);
-      alert("Tour Added Successfully");
-    } catch (error) {
-      console.log(error);
-      alert("Something went wrong");
+      if (response?.data?.statusCode === 400) {
+        toast.error(response?.data?.message || "Your data already exists");
+        setSubmitting(false);
+        return;
+      }
+      toast.success("Tour Added Successfully");
+      setFormData({
+        title: "",
+        description: "",
+        duration: "",
+        transport: "",
+        location: "",
+        maxGuests: "",
+        pricePerPerson: "",
+        child: "",
+        rating: "",
+        reviewsCount: "",
+        badge: "",
+        freeCancellation: false,
+        isActive: true,
+        coverImage: null,
+        images: [],
+      });
+      setCoverPreview(null);
+      setGalleryPreviews([]);
+      router.push("/listIsland");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
 
@@ -405,6 +450,42 @@ const PopularIsland = () => {
           .pi-grid, .pi-upload-grid { grid-template-columns: 1fr; }
           .pi-toggles { flex-direction: column; gap: 16px; }
         }
+
+        .pi-submit {
+  background: #d97706;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 140px;
+  min-height: 45px;
+}
+
+.pi-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-loader {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
       `}</style>
 
       <div className="pi-root">
@@ -553,7 +634,17 @@ const PopularIsland = () => {
 
             </div>
 
-            <button type="submit" className="pi-submit">Add Tour →</button>
+            <button
+              type="submit"
+              className="pi-submit"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="btn-loader"></span>
+              ) : (
+                "Add Tour →"
+              )}
+            </button>
           </form>
         </div>
       </div>
