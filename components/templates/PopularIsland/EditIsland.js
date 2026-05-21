@@ -164,7 +164,7 @@ const EditIsland = ({ slug }) => {
       });
 
       const result = await res.json();
-      console.log("Update response:", result);
+      // console.log("Update response:", result);
 
       if (result?.statusCode === 400) {
         toast.error(result?.message || "Update failed");
