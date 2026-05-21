@@ -62,7 +62,7 @@ const PopularIsland = () => {
     setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     const requiredFields = [
@@ -331,19 +331,21 @@ const PopularIsland = () => {
         .pi-upload-section { display: flex; flex-direction: column; gap: 12px; }
 
         .pi-upload-box {
-          border: 2px dashed #e5d9c3;
-          border-radius: 14px;
-          padding: 22px 18px;
-          text-align: center;
-          cursor: pointer;
-          position: relative;
-          transition: border-color 0.2s, background 0.2s;
-          min-height: 110px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fdf8f0;
-        }
+  border: 2px dashed #e5d9c3;
+  border-radius: 14px;
+  padding: 0;               
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 220px;       
+  height: 220px;           
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdf8f0;
+  overflow: hidden;
+}
         .pi-upload-box:hover {
           border-color: #f59e0b;
           background: #fffbf0;

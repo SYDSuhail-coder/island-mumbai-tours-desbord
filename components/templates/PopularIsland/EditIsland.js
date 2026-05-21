@@ -405,20 +405,21 @@ const EditIsland = ({ slug }) => {
         .pi-upload-section { display: flex; flex-direction: column; gap: 12px; }
 
         .pi-upload-box {
-          border: 2px dashed #e5d9c3;
-          border-radius: 14px;
-          padding: 22px 18px;
-          text-align: center;
-          cursor: pointer;
-          position: relative;
-          transition: border-color 0.2s, background 0.2s;
-          min-height: 110px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fdf8f0;
-          overflow: hidden;
-        }
+  border: 2px dashed #e5d9c3;
+  border-radius: 14px;
+  padding: 0;              
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 220px;      
+  height: 220px;            
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdf8f0;
+  overflow: hidden;
+}
         .pi-upload-box:hover {
           border-color: #f59e0b;
           background: #fffbf0;
@@ -650,7 +651,16 @@ const EditIsland = ({ slug }) => {
                       <img
                         src={coverPreview}
                         alt="Cover"
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: 13, opacity: 0.85 }}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          objectPosition: "center",
+                          borderRadius: 12,
+                          opacity: 1,
+                        }}
                       />
                       <button
                         type="button"
