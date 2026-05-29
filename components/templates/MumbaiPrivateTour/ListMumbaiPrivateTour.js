@@ -85,7 +85,7 @@ const ImagePreviewDialog = ({ open, onClose, images = [], title }) => (
 );
 
 // ── Main Component ──
-const ListIsland = () => {
+const ListMumbaiPrivateTour = () => {
     const router = useRouter();
     const [tours, setTours] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ const ListIsland = () => {
         setLoading(true);
         try {
             const res = await axios.get(
-                `/api/get-island-page?from=${pageNum}&to=${PAGE_SIZE}`
+                `/api/get-private-page?from=${pageNum}&to=${PAGE_SIZE}`
             );
             const json = res.data;
             setTotalCount(json?.totalcount || 0);
@@ -132,7 +132,7 @@ const ListIsland = () => {
     const confirmDelete = async () => {
         setDeleting(true);
         try {
-            await axios.delete(`/api/delete-island-page/${deleteDialog.slug}`);
+            await axios.delete(`/api/delete-private-page/${deleteDialog.slug}`);
             setTours((prev) => prev.filter((t) => t.slug !== deleteDialog.slug));
             setTotalCount((prev) => prev - 1);
             toast.success("Deleted Successfully");
@@ -156,13 +156,13 @@ const ListIsland = () => {
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
                     <Box>
                         <Typography variant="h5" fontWeight={700} sx={{ color: "#1c1408" }}>
-                            List-Popular-Tours
+                            List-Private-Tours
                         </Typography>
                     </Box>
                     <Button
                         variant="contained"
                         startIcon={<AddCircleOutlineIcon />}
-                        onClick={() => router.push("/popularIsland")}
+                        onClick={() => router.push("/mumbaiPrivateTour")}
                         sx={{
                             background: "linear-gradient(135deg, #d97706 0%, #fbbf24 100%)",
                             color: "#fff",
@@ -335,7 +335,7 @@ const ListIsland = () => {
                                                             <IconButton
                                                                 size="small"
                                                                 sx={{ color: "#d97706", "&:hover": { bgcolor: "#fef3c7" } }}
-                                                                onClick={() => router.push(`/editIsland/${tour.slug}`)}
+                                                                onClick={() => router.push(`/editMumbaiPrivateTour/${tour.slug}`)}
                                                             >
                                                                 <EditOutlinedIcon fontSize="small" />
                                                             </IconButton>
@@ -420,4 +420,4 @@ const ListIsland = () => {
     );
 };
 
-export default ListIsland;
+export default ListMumbaiPrivateTour;

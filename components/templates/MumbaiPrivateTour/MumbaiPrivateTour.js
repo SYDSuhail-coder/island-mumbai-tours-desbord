@@ -1,16 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-const EditIsland = ({ slug }) => {
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
+const MumbaiPrivateTour = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -29,65 +24,10 @@ const EditIsland = ({ slug }) => {
     images: [],
   });
 
-  // Existing images from server (URLs)
   const [coverPreview, setCoverPreview] = useState(null);
-  const [coverIsNew, setCoverIsNew] = useState(false);
-  const [existingGallery, setExistingGallery] = useState([]);
-  const [newGalleryFiles, setNewGalleryFiles] = useState([]);   // new File objects
-  const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
-  // ── Fetch existing tour data
-  useEffect(() => {
-    if (!slug) return;
-    fetchTour();
-  }, [slug]);
-
-  const fetchTour = async () => {
-    setLoading(true);
-
-    try {
-      const res = await fetch(`/api/get-by-slug-island-page/${slug}`);
-      const json = await res.json();
-      const tour =
-        json?.result?.data ||
-        json?.result ||
-        json?.data ||
-        json;
-
-      setFormData({
-        title: tour.title || "",
-        description: tour.description || "",
-        duration: tour.duration || "",
-        transport: tour.transport || "",
-        location: tour.location || "",
-        maxGuests: tour.maxGuests || "",
-        pricePerPerson: tour.pricePerPerson || "",
-        child: tour.child || "",
-        freeCancellation: tour.freeCancellation ?? true,
-        rating: tour.rating || "",
-        reviewsCount: tour.reviewsCount || "",
-        badge: tour.badge || "",
-        isActive: tour.isActive ?? true,
-        coverImage: null,
-        images: [],
-      });
-
-      // Cover Image
-      if (tour.coverImage) {
-        setCoverPreview(tour.coverImage);
-      }
-
-      // Existing Gallery
-      if (Array.isArray(tour.images)) {
-        setExistingGallery(tour.images);
-      }
-
-    } catch (err) {
-      console.log("Fetch Error", err);
-      toast.error("Failed to load tour data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -97,90 +37,92 @@ const EditIsland = ({ slug }) => {
     }));
   };
 
-  // Cover image — new file picked
   const handleCoverImage = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
     setFormData((prev) => ({ ...prev, coverImage: file }));
-    setCoverPreview(URL.createObjectURL(file));
-    setCoverIsNew(true);
+    if (file) setCoverPreview(URL.createObjectURL(file));
   };
 
   const removeCoverImage = () => {
     setFormData((prev) => ({ ...prev, coverImage: null }));
     setCoverPreview(null);
-    setCoverIsNew(false);
   };
 
-  // Gallery — remove existing server image
-  const removeExistingGallery = (index) => {
-    setExistingGallery((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Gallery — add new files
-  const handleNewImages = (e) => {
+  const handleImages = (e) => {
     const files = Array.from(e.target.files);
-    setNewGalleryFiles((prev) => [...prev, ...files]);
-    setNewGalleryPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    setFormData((prev) => ({ ...prev, images: [...prev.images, ...files] }));
+    setGalleryPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
   };
 
-  // Gallery — remove new (not yet uploaded) file
-  const removeNewGallery = (index) => {
-    setNewGalleryFiles((prev) => prev.filter((_, i) => i !== index));
-    setNewGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  const removeGalleryImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ── Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    const data = new FormData();
-
-    const textFields = [
-      "title", "description", "duration", "transport", "location",
-      "maxGuests", "pricePerPerson", "child", "rating", "reviewsCount", "badge",
+    setSubmitting(true);
+    const requiredFields = [
+      "title",
+      "description",
+      "duration",
+      "transport",
+      "location",
+      "maxGuests",
+      "pricePerPerson",
+      "child",
+      "rating",
+      "reviewsCount",
+      "badge",
     ];
-    textFields.forEach((key) => data.append(key, formData[key]));
-    data.append("freeCancellation", formData.freeCancellation);
-    data.append("isActive", formData.isActive);
 
-    // ✅ Cover image fix
-    if (formData.coverImage) {
-      data.append("coverImage", formData.coverImage);  // nai file
-    } else if (coverPreview) {
-      data.append("coverImage", coverPreview);  // purana URL
+    const hasEmptyField = requiredFields.some((field) => !formData[field]);
+    if (hasEmptyField || !formData.coverImage || formData.images.length === 0) {
+      toast.warning("Please fill all fields");
+      setSubmitting(false);
+      return;
     }
 
-    // Existing gallery URLs
-    existingGallery.forEach((url) => data.append("existingImages", url));
-
-    // New gallery files
-    newGalleryFiles.forEach((file) => data.append("images", file));
+    const data = new FormData();
+    requiredFields.forEach((key) => data.append(key, formData[key]));
+    data.append("freeCancellation", formData.freeCancellation);
+    data.append("isActive", formData.isActive);
+    data.append("coverImage", formData.coverImage);
+    formData.images.forEach((img) => data.append("images", img));
 
     try {
-      const res = await fetch(`/api/upadete-island-page/${slug}`, {
-        method: "PUT",
-        body: data,
-      });
-
-      const result = await res.json();
-      // console.log("Update response:", result);
-
-      if (result?.statusCode === 400) {
-        toast.error(result?.message || "Update failed");
-        setSaving(false);
+      const response = await axios.post("/api/create-private-page", data);
+      if (response?.data?.statusCode === 400) {
+        toast.error(response?.data?.message || "Your data already exists");
+        setSubmitting(false);
         return;
       }
-
-      toast.success("Tour Updated Successfully");
-      router.push("/listIsland");
-
-    } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Something went wrong");
-
+      toast.success("Tour Added Successfully");
+      setFormData({
+        title: "",
+        description: "",
+        duration: "",
+        transport: "",
+        location: "",
+        maxGuests: "",
+        pricePerPerson: "",
+        child: "",
+        rating: "",
+        reviewsCount: "",
+        badge: "",
+        freeCancellation: false,
+        isActive: true,
+        coverImage: null,
+        images: [],
+      });
+      setCoverPreview(null);
+      setGalleryPreviews([]);
+      router.push("/listMumbaiPrivateTour");
     } finally {
-      setSaving(false);
+      setSubmitting(false);
     }
   };
 
@@ -240,34 +182,12 @@ const EditIsland = ({ slug }) => {
           box-shadow: 0 2px 8px rgba(245,158,11,0.3);
         }
 
-        .pi-badge-edit {
-          background: linear-gradient(135deg, #0369a1, #0ea5e9);
-          color: #fff;
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          padding: 5px 13px;
-          border-radius: 100px;
-          box-shadow: 0 2px 8px rgba(14,165,233,0.3);
-        }
-
         .pi-title {
           font-family: 'Cormorant Garamond', serif;
           font-size: 30px;
           color: #1c1408;
           font-weight: 700;
           letter-spacing: -0.01em;
-        }
-
-        .pi-slug {
-          font-size: 12px;
-          color: #b45309;
-          background: #fef3c7;
-          border-radius: 6px;
-          padding: 3px 10px;
-          margin-left: auto;
-          font-family: 'Outfit', monospace;
         }
 
         .pi-section-label {
@@ -349,6 +269,7 @@ const EditIsland = ({ slug }) => {
         }
         .pi-textarea::placeholder { color: #b8ad9e; }
 
+        /* Toggles */
         .pi-toggles {
           display: flex;
           gap: 24px;
@@ -386,8 +307,12 @@ const EditIsland = ({ slug }) => {
           transition: transform 0.25s;
           box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
-        .pi-toggle input:checked + .pi-switch { background: #f59e0b; }
-        .pi-toggle input:checked + .pi-switch::after { transform: translateX(18px); }
+        .pi-toggle input:checked + .pi-switch {
+          background: #f59e0b;
+        }
+        .pi-toggle input:checked + .pi-switch::after {
+          transform: translateX(18px);
+        }
 
         .pi-toggle-text {
           font-size: 13px;
@@ -395,6 +320,7 @@ const EditIsland = ({ slug }) => {
           color: #4b3a1f;
         }
 
+        /* Upload areas */
         .pi-upload-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -407,13 +333,13 @@ const EditIsland = ({ slug }) => {
         .pi-upload-box {
   border: 2px dashed #e5d9c3;
   border-radius: 14px;
-  padding: 0;              
+  padding: 0;               
   text-align: center;
   cursor: pointer;
   position: relative;
   transition: border-color 0.2s, background 0.2s;
-  min-height: 220px;      
-  height: 220px;            
+  min-height: 220px;       
+  height: 220px;           
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,10 +361,19 @@ const EditIsland = ({ slug }) => {
         }
 
         .pi-upload-inner { pointer-events: none; }
+
         .pi-upload-icon { font-size: 26px; margin-bottom: 6px; }
-        .pi-upload-title { font-size: 13px; font-weight: 600; color: #3d2c0e; margin-bottom: 3px; }
+
+        .pi-upload-title {
+          font-size: 13px;
+          font-weight: 600;
+          color: #3d2c0e;
+          margin-bottom: 3px;
+        }
+
         .pi-upload-sub { font-size: 11px; color: #a8956d; }
 
+        /* Image grid previews */
         .pi-images-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -459,10 +394,6 @@ const EditIsland = ({ slug }) => {
           height: 100%;
           object-fit: cover;
           display: block;
-        }
-
-        .pi-img-thumb-wrap.existing {
-          border-color: #fbbf24;
         }
 
         .pi-img-remove {
@@ -493,22 +424,9 @@ const EditIsland = ({ slug }) => {
           margin-top: 4px;
         }
 
-        .pi-gallery-label {
-          font-size: 10px;
-          font-weight: 600;
-          color: #b45309;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          margin-bottom: 6px;
-        }
-
-        .pi-actions {
-          display: flex;
-          gap: 12px;
-        }
-
+        /* Submit */
         .pi-submit {
-          flex: 1;
+          width: 100%;
           padding: 16px;
           background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
           border: none;
@@ -522,41 +440,62 @@ const EditIsland = ({ slug }) => {
           transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
           box-shadow: 0 4px 20px rgba(217,119,6,0.3);
         }
-        .pi-submit:hover { opacity: 0.94; transform: translateY(-1px); box-shadow: 0 6px 28px rgba(217,119,6,0.4); }
-        .pi-submit:active { transform: translateY(0); }
-        .pi-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        .pi-cancel {
-          padding: 16px 28px;
-          background: transparent;
-          border: 1.5px solid #e5d9c3;
-          border-radius: 12px;
-          color: #78350f;
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s, border-color 0.2s;
+        .pi-submit:hover {
+          opacity: 0.94;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 28px rgba(217,119,6,0.4);
         }
-        .pi-cancel:hover { background: #fef3c7; border-color: #fbbf24; }
+        .pi-submit:active { transform: translateY(0); }
 
         @media (max-width: 640px) {
           .pi-card { padding: 28px 18px 36px; }
           .pi-grid, .pi-upload-grid { grid-template-columns: 1fr; }
           .pi-toggles { flex-direction: column; gap: 16px; }
-          .pi-actions { flex-direction: column; }
         }
+
+        .pi-submit {
+  background: #d97706;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 140px;
+  min-height: 45px;
+}
+
+.pi-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-loader {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
       `}</style>
 
       <div className="pi-root">
         <div className="pi-card">
-
           {/* Header */}
           <div className="pi-header">
             <span className="pi-badge">Mumbai Tours</span>
-            <h1 className="pi-title">Edit Popular Tour</h1>
-            <span className="pi-badge-edit">Editing</span>
-            <span className="pi-slug">{slug}</span>
+            <h1 className="pi-title">Add Private Tour</h1>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -623,7 +562,7 @@ const EditIsland = ({ slug }) => {
               </div>
             </div>
 
-            {/* Settings */}
+            {/* Toggles */}
             <div className="pi-section-label">Settings</div>
             <div className="pi-toggles" style={{ marginBottom: 32 }}>
               <label className="pi-toggle">
@@ -642,30 +581,17 @@ const EditIsland = ({ slug }) => {
             <div className="pi-section-label">Images</div>
             <div className="pi-upload-grid">
 
-              {/* Cover Image */}
+              {/* Cover Image — single */}
               <div className="pi-upload-section">
                 <div className="pi-upload-box">
                   <input type="file" accept="image/*" onChange={handleCoverImage} />
                   {coverPreview ? (
                     <>
-                      <img
-                        src={coverPreview}
-                        alt="Cover"
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          objectPosition: "center",
-                          borderRadius: 12,
-                          opacity: 1,
-                        }}
-                      />
+                      <img src={coverPreview} alt="Cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 13, opacity: 0.85 }} />
                       <button
                         type="button"
                         className="pi-img-remove"
-                        style={{ position: "absolute", top: 8, right: 8, zIndex: 3 }}
+                        style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}
                         onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}
                       >✕</button>
                     </>
@@ -673,77 +599,54 @@ const EditIsland = ({ slug }) => {
                     <div className="pi-upload-inner">
                       <div className="pi-upload-icon">🖼️</div>
                       <div className="pi-upload-title">Cover Image</div>
-                      <div className="pi-upload-sub">Click to replace</div>
+                      <div className="pi-upload-sub">Click to upload</div>
                     </div>
                   )}
                 </div>
-                {coverIsNew && <div className="pi-img-count">✦ New cover selected</div>}
               </div>
 
               {/* Gallery Images */}
               <div className="pi-upload-section">
                 <div className="pi-upload-box">
-                  <input type="file" accept="image/*" multiple onChange={handleNewImages} />
+                  <input type="file" accept="image/*" multiple onChange={handleImages} />
                   <div className="pi-upload-inner">
                     <div className="pi-upload-icon">📷</div>
-                    <div className="pi-upload-title">Add More Photos</div>
+                    <div className="pi-upload-title">Gallery Images</div>
                     <div className="pi-upload-sub">Select multiple photos</div>
                   </div>
                 </div>
-
-                {/* Existing gallery */}
-                {existingGallery.length > 0 && (
+                {galleryPreviews.length > 0 && (
                   <>
-                    <div className="pi-gallery-label">Current Photos</div>
                     <div className="pi-images-grid">
-                      {existingGallery.map((src, i) => (
-                        <div key={i} className="pi-img-thumb-wrap existing">
-                          <img src={src} alt={`Existing ${i + 1}`} />
-                          <button
-                            type="button"
-                            className="pi-img-remove"
-                            onClick={() => removeExistingGallery(i)}
-                          >✕</button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pi-img-count">{existingGallery.length} existing photo(s)</div>
-                  </>
-                )}
-
-                {/* New gallery files */}
-                {newGalleryPreviews.length > 0 && (
-                  <>
-                    <div className="pi-gallery-label" style={{ marginTop: 10 }}>New Photos</div>
-                    <div className="pi-images-grid">
-                      {newGalleryPreviews.map((src, i) => (
+                      {galleryPreviews.map((src, i) => (
                         <div key={i} className="pi-img-thumb-wrap">
-                          <img src={src} alt={`New ${i + 1}`} />
+                          <img src={src} alt={`Gallery ${i + 1}`} />
                           <button
                             type="button"
                             className="pi-img-remove"
-                            onClick={() => removeNewGallery(i)}
+                            onClick={() => removeGalleryImage(i)}
                           >✕</button>
                         </div>
                       ))}
                     </div>
-                    <div className="pi-img-count">{newGalleryPreviews.length} new photo(s) to upload</div>
+                    <div className="pi-img-count">{galleryPreviews.length} gallery image(s)</div>
                   </>
                 )}
               </div>
 
             </div>
 
-            {/* Actions */}
-            <div className="pi-actions">
-              <button type="button" className="pi-cancel" onClick={() => router.push("/listIsland")}>
-                ← Cancel
-              </button>
-              <button type="submit" className="pi-submit" disabled={saving}>
-                {saving ? "Saving..." : "Update Tour →"}
-              </button>
-            </div>
-
+            <button
+              type="submit"
+              className="pi-submit"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="btn-loader"></span>
+              ) : (
+                "Add Tour →"
+              )}
+            </button>
           </form>
         </div>
       </div>
@@ -751,4 +654,4 @@ const EditIsland = ({ slug }) => {
   );
 };
 
-export default EditIsland;
+export default MumbaiPrivateTour;

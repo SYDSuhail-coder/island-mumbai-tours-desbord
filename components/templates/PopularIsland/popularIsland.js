@@ -495,7 +495,7 @@ const PopularIsland = () => {
           {/* Header */}
           <div className="pi-header">
             <span className="pi-badge">Mumbai Tours</span>
-            <h1 className="pi-title">Add Private Tour</h1>
+            <h1 className="pi-title">Add Popuar Tour</h1>
           </div>
 
           <form onSubmit={handleSubmit}>

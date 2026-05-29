@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const EditIsland = ({ slug }) => {
+const EditMumbaiWalkingTour = ({ slug }) => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ const EditIsland = ({ slug }) => {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/get-by-slug-island-page/${slug}`);
+      const res = await fetch(`/api/get-by-slug-walking-page/${slug}`);
       const json = await res.json();
       const tour =
         json?.result?.data ||
@@ -158,7 +158,7 @@ const EditIsland = ({ slug }) => {
     newGalleryFiles.forEach((file) => data.append("images", file));
 
     try {
-      const res = await fetch(`/api/upadete-island-page/${slug}`, {
+      const res = await fetch(`/api/upadate-walking-page/${slug}`, {
         method: "PUT",
         body: data,
       });
@@ -173,7 +173,7 @@ const EditIsland = ({ slug }) => {
       }
 
       toast.success("Tour Updated Successfully");
-      router.push("/listIsland");
+      router.push("/listMumbaiWalkingTour");
 
     } catch (error) {
       console.error("Update error:", error);
@@ -554,7 +554,7 @@ const EditIsland = ({ slug }) => {
           {/* Header */}
           <div className="pi-header">
             <span className="pi-badge">Mumbai Tours</span>
-            <h1 className="pi-title">Edit Popular Tour</h1>
+            <h1 className="pi-title">Edit Walking Tour</h1>
             <span className="pi-badge-edit">Editing</span>
             <span className="pi-slug">{slug}</span>
           </div>
@@ -736,7 +736,7 @@ const EditIsland = ({ slug }) => {
 
             {/* Actions */}
             <div className="pi-actions">
-              <button type="button" className="pi-cancel" onClick={() => router.push("/listIsland")}>
+              <button type="button" className="pi-cancel" onClick={() => router.push("/listMumbaiWalkingTour")}>
                 ← Cancel
               </button>
               <button type="submit" className="pi-submit" disabled={saving}>
@@ -751,4 +751,4 @@ const EditIsland = ({ slug }) => {
   );
 };
 
-export default EditIsland;
+export default EditMumbaiWalkingTour;

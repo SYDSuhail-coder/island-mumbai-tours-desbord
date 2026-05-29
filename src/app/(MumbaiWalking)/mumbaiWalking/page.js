@@ -1,5 +1,5 @@
 import React from 'react'
-import MumbaiWalking from '../../../../components/templates/MumbaiWalking/mumbaiWalking'
+import MumbaiWalking from '../../../../components/templates/MumbaiWalkingTour/MumbaiWalkingTour'
 
 const page = () => {
   return (

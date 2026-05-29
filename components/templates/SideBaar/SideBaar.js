@@ -20,6 +20,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteModules } from "../reduxForLogin/action";
+import ContactPhoneOutlinedIcon from '@mui/icons-material/ContactPhoneOutlined';
+import ContactMailOutlinedIcon from '@mui/icons-material/ContactMailOutlined';
+import ContactEmergencyOutlinedIcon from '@mui/icons-material/ContactEmergencyOutlined';
+import ReorderOutlinedIcon from '@mui/icons-material/ReorderOutlined';
 import { usePathname } from "next/navigation";
 const drawerWidth = 240;
 
@@ -65,11 +69,13 @@ export default function SideBaar(props) {
   const [open2, setOpen2] = React.useState(false);
   const [open3, setOpen3] = React.useState(false);
   const [open4, setOpen4] = React.useState(false);
+  const [open5, setOpen5] = React.useState(false)
 
   const handleClick1 = () => setOpen1(!open1);
   const handleClick2 = () => setOpen2(!open2);
   const handleClick3 = () => setOpen3(!open3);
   const handleClick4 = () => setOpen4(!open4);
+  const handleClick5 = () => setOpen5(!open5);
 
   // ── State
   const [Dashboard, setDashboard] = useState({
@@ -84,25 +90,37 @@ export default function SideBaar(props) {
   const [Users, setUsers] = useState({
     id: 0, allowed: false,
     pages: [{ id: 0, allowed: false }],
+    pages: [{ id: 0, allowed: false }],
   });
   const [popularIsland, setpopularIsland] = useState({
     id: 0, allowed: false,
     pages: [{ id: 0, allowed: false }],
+    pages: [{ id: 0, allowed: false }],
   });
   const [mumbaiWalking, setmumbaiWalking] = useState({
     id: 0, allowed: false,
+    pages: [{ id: 0, allowed: false }],
+    pages: [{ id: 0, allowed: false }],
+  });
+
+  const [mumbaiPrivateTour, setmumbaiPrivateTour] = useState({
+    id: 0, allowed: false,
+    pages: [{ id: 0, allowed: false }],
     pages: [{ id: 0, allowed: false }],
   });
 
   // ── Load modules from redux
   useEffect(() => {
     const modules = loginDetails?.roleInfo?.modules;
+    console.log("All Modules", modules);
     if (!modules) return;
 
     const dashboardModule = modules.find(m => m.id === 390600);
     const usersModule = modules.find(m => m.id === 500001);
     const popularIslandModule = modules.find(m => m.id === 500003);
     const mumbaiWalkingModule = modules.find(m => m.id === 123456);
+    const mumbaiPrivateModule = modules.find(m => m.id === 187532);
+
 
     if (dashboardModule) {
       setDashboard({
@@ -136,6 +154,10 @@ export default function SideBaar(props) {
         pages: [{
           id: usersModule.pages[0]?.id || 0,
           allowed: usersModule.pages[0]?.allowed || false
+        },
+        {
+          id: usersModule.pages[1]?.id || 0,
+          allowed: usersModule.pages[1]?.allowed || false
         }]
       });
     }
@@ -147,6 +169,10 @@ export default function SideBaar(props) {
         pages: [{
           id: popularIslandModule.pages[0]?.id || 0,
           allowed: popularIslandModule.pages[0]?.allowed || false
+        },
+        {
+          id: popularIslandModule.pages[1]?.id || 0,
+          allowed: popularIslandModule.pages[1]?.allowed || false
         }]
       });
     }
@@ -157,6 +183,25 @@ export default function SideBaar(props) {
         pages: [{
           id: mumbaiWalkingModule.pages[0]?.id || 0,
           allowed: mumbaiWalkingModule.pages[0]?.allowed || false
+        },
+        {
+          id: mumbaiWalkingModule.pages[1]?.id || 0,
+          allowed: mumbaiWalkingModule.pages[1]?.allowed || false
+        }]
+      });
+    }
+
+    if (mumbaiPrivateModule) {
+      setmumbaiPrivateTour({
+        id: mumbaiPrivateModule.id,
+        allowed: mumbaiPrivateModule.allowed,
+        pages: [{
+          id: mumbaiPrivateModule.pages[0]?.id || 0,
+          allowed: mumbaiPrivateModule.pages[0]?.allowed || false
+        },
+        {
+          id: mumbaiPrivateModule.pages[1]?.id || 0,
+          allowed: mumbaiPrivateModule.pages[1]?.allowed || false
         }]
       });
     }
@@ -166,9 +211,10 @@ export default function SideBaar(props) {
   //Auto open dropdown on active route 
   useEffect(() => {
     if (["/dashboard", "/reports", "/packages", "/users"].includes(pathname)) setOpen1(true);
-    if (pathname === "/addUsers") setOpen2(true);
-    if (pathname === "/popularIsland") setOpen3(true);
-    if (pathname === "/mumbaiWalking") setOpen4(true);
+    if (["/addUsers", "/listusers"].includes(pathname)) setOpen2(true);
+    if (["/popularIsland", "/listIsland"].includes(pathname)) setOpen3(true);
+    if (["/mumbaiWalking", "/listMumbaiWalkingTour"].includes(pathname)) setOpen4(true);
+    if (["/mumbaiPrivateTour", "/listMumbaiPrivateTour"].includes(pathname)) setOpen5(true);
   }, [pathname]);
 
   //Drawer content
@@ -248,7 +294,7 @@ export default function SideBaar(props) {
         <List disablePadding>
           <ListItemButton onClick={handleClick2} sx={{ px: 2, py: 1.2, color: "#D4A847" }}>
             <ListItemIcon sx={{ minWidth: 36 }}>
-              <LoginOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
+              <StarsOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
             </ListItemIcon>
             <ListItemText primary="Users Group" sx={{ "& .MuiListItemText-primary": { color: "#D4A847", fontSize: 14, fontWeight: 600 } }} />
             {open2
@@ -264,6 +310,16 @@ export default function SideBaar(props) {
                 <ListItemText primary="add-Users" sx={activeTextSx(isActive("/addUsers"))} />
               </ListItemButton>
             )}
+
+            {/* listUsers */}
+            {Users.pages[1].id === 500554 && Users.pages[1].allowed && (
+              <ListItemButton component={Link} href="/listUsers" sx={activeItemSx(isActive("/listUsers"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ReorderOutlinedIcon sx={activeIconSx(isActive("/addUsers"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="List-Users" sx={activeTextSx(isActive("/listUsers"))} />
+              </ListItemButton>
+            )}
           </Collapse>
         </List>
       )}
@@ -273,7 +329,7 @@ export default function SideBaar(props) {
         <List disablePadding>
           <ListItemButton onClick={handleClick3} sx={{ px: 2, py: 1.2, color: "#D4A847" }}>
             <ListItemIcon sx={{ minWidth: 36 }}>
-              <StarsOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
+              <ContactEmergencyOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
             </ListItemIcon>
             <ListItemText primary="Popular Island" sx={{ "& .MuiListItemText-primary": { color: "#D4A847", fontSize: 14, fontWeight: 600 } }} />
             {open3
@@ -286,7 +342,17 @@ export default function SideBaar(props) {
                 <ListItemIcon sx={{ minWidth: 34 }}>
                   <AirplaneTicketOutlinedIcon sx={activeIconSx(isActive("/popularIsland"))} fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="Island-Reports" sx={activeTextSx(isActive("/popularIsland"))} />
+                <ListItemText primary="Add-Island" sx={activeTextSx(isActive("/popularIsland"))} />
+              </ListItemButton>
+            )}
+
+            {/* listpopularIsland */}
+            {popularIsland.pages[1].id === 500123 && popularIsland.pages[1].allowed && (
+              <ListItemButton component={Link} href="/listIsland" sx={activeItemSx(isActive("/listIsland"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ReorderOutlinedIcon sx={activeIconSx(isActive("/listIsland"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="List-Island" sx={activeTextSx(isActive("/listIsland"))} />
               </ListItemButton>
             )}
           </Collapse>
@@ -298,7 +364,7 @@ export default function SideBaar(props) {
         <List disablePadding>
           <ListItemButton onClick={handleClick4} sx={{ px: 2, py: 1.2, color: "#D4A847" }}>
             <ListItemIcon sx={{ minWidth: 36 }}>
-              <StarsOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
+              <ContactPhoneOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
             </ListItemIcon>
             <ListItemText primary="Mumbai Walking" sx={{ "& .MuiListItemText-primary": { color: "#D4A847", fontSize: 14, fontWeight: 600 } }} />
             {open4
@@ -311,7 +377,50 @@ export default function SideBaar(props) {
                 <ListItemIcon sx={{ minWidth: 34 }}>
                   <AirplaneTicketOutlinedIcon sx={activeIconSx(isActive("/mumbaiWalking"))} fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="Walking-Reports" sx={activeTextSx(isActive("/mumbaiWalking"))} />
+                <ListItemText primary="Add-Walking" sx={activeTextSx(isActive("/mumbaiWalking"))} />
+              </ListItemButton>
+            )}
+            {/* listWalkingTour */}
+            {mumbaiWalking.pages[1].id === 123567 && mumbaiWalking.pages[1].allowed && (
+              <ListItemButton component={Link} href="/listMumbaiWalkingTour" sx={activeItemSx(isActive("/listMumbaiWalkingTour"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ReorderOutlinedIcon sx={activeIconSx(isActive("/listMumbaiWalkingTour"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="List-Mumbai-Walking" sx={activeTextSx(isActive("/listMumbaiWalkingTour"))} />
+              </ListItemButton>
+            )}
+          </Collapse>
+        </List>
+      )}
+
+      {/*Mumbai Private Module*/}
+      {mumbaiPrivateTour.id === 187532 && mumbaiPrivateTour.allowed === true && (
+        <List disablePadding>
+          <ListItemButton onClick={handleClick5} sx={{ px: 2, py: 1.2, color: "#D4A847" }}>
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              <ContactMailOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
+            </ListItemIcon>
+            <ListItemText primary="Mumbai Private Tour" sx={{ "& .MuiListItemText-primary": { color: "#D4A847", fontSize: 14, fontWeight: 600 } }} />
+            {open5
+              ? <ExpandLess sx={{ color: "#D4A847", fontSize: 18 }} />
+              : <ExpandMore sx={{ color: "#D4A847", fontSize: 18 }} />}
+          </ListItemButton>
+          <Collapse in={open5} timeout="auto" unmountOnExit>
+            {mumbaiPrivateTour.pages[0].id === 500055 && mumbaiPrivateTour.pages[0].allowed && (
+              <ListItemButton component={Link} href="/mumbaiPrivateTour" sx={activeItemSx(isActive("/mumbaiPrivateTour"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <AirplaneTicketOutlinedIcon sx={activeIconSx(isActive("/mumbaiPrivateTour"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Add-Private-Tour" sx={activeTextSx(isActive("/mumbaiPrivateTour"))} />
+              </ListItemButton>
+            )}
+            {/* listWalkingTour */}
+            {mumbaiPrivateTour.pages[1].id === 500056 && mumbaiPrivateTour.pages[1].allowed && (
+              <ListItemButton component={Link} href="/listMumbaiPrivateTour" sx={activeItemSx(isActive("/listMumbaiPrivateTour"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ReorderOutlinedIcon sx={activeIconSx(isActive("/listMumbaiPrivateTour"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="list-Private-Tour" sx={activeTextSx(isActive("/listMumbaiPrivateTour"))} />
               </ListItemButton>
             )}
           </Collapse>
