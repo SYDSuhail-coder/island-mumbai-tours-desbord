@@ -1,169 +1,239 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const data = {
-  stats: [
-    { label: "Total Users", value: "1,284", change: "+12%", icon: "👥" },
-    { label: "Packages Sold", value: "847", change: "+8%", icon: "🎟️" },
-    { label: "Revenue", value: "₹8,42,300", change: "+21%", icon: "💰" },
-    { label: "Avg. Rating", value: "4.9★", change: "+0.2", icon: "⭐" },
-  ],
-  monthly: [
-    { month: "Nov", users: 62, revenue: 48200 },
-    { month: "Dec", users: 88, revenue: 72100 },
-    { month: "Jan", users: 104, revenue: 91300 },
-    { month: "Feb", users: 96, revenue: 83500 },
-    { month: "Mar", users: 143, revenue: 124500 },
-    { month: "Apr", users: 118, revenue: 102700 },
-  ],
-  bookings: [
-    { id: "#B1041", name: "Priya Sharma", tour: "Elephanta", date: "Apr 17", amount: "₹1,998", status: "Confirmed" },
-    { id: "#B1040", name: "Aarav Kumar", tour: "Alibaug", date: "Apr 18", amount: "₹2,998", status: "Pending" },
-    { id: "#B1039", name: "Sneha & Mihir", tour: "Sunset Cruise", date: "Apr 19", amount: "₹2,398", status: "Confirmed" },
-    { id: "#B1038", name: "Rohit Mehta", tour: "Mandwa", date: "Apr 20", amount: "₹1,598", status: "Confirmed" },
-  ],
+const statusColor = {
+  Confirmed: { bg: "#E1F5EE", text: "#0F6E56" },
+  Pending: { bg: "#FAEEDA", text: "#854F0B" },
+  Cancelled: { bg: "#FCEBEB", text: "#A32D2D" },
 };
 
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function formatType(t) {
+  const map = {
+    "private-tour": "Private",
+    "walking-tour": "Walking",
+    "tours": "Tour",
+    "book-now-page": "Book Now",
+  };
+  return map[t] || t;
+}
+
 export default function Dashboard() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [chartType, setChartType] = useState("revenue");
 
-  const maxRevenue = Math.max(...data.monthly.map(m => m.revenue));
-  const maxUsers = Math.max(...data.monthly.map(m => m.users));
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const statusColor = {
-    Confirmed: { bg: "#E1F5EE", text: "#0F6E56" },
-    Pending: { bg: "#FAEEDA", text: "#854F0B" },
-    Cancelled: { bg: "#FCEBEB", text: "#A32D2D" },
-  };
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/get-section-api`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      setBookings(json?.data || []);
+    } catch (err) {
+      setError("API se data nahi aaya. Server check karein.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Stats
+  const totalBookings = bookings.length;
+  const totalRevenue = bookings.reduce((s, b) => s + (b.totalAmount || 0), 0);
+  const pendingCount = bookings.filter((b) => b.bookingStatus === "Pending").length;
+  const totalGuests = bookings.reduce((s, b) => s + (b.adults || 0) + (b.children || 0), 0);
+
+  // Chart: group by date
+  const dateMap = {};
+  bookings.forEach((b) => {
+    const key = formatDate(b.date);
+    if (!dateMap[key]) dateMap[key] = { revenue: 0, count: 0 };
+    dateMap[key].revenue += b.totalAmount || 0;
+    dateMap[key].count += 1;
+  });
+  const chartDates = Object.keys(dateMap);
+  const chartVals = chartDates.map((d) =>
+    chartType === "revenue" ? dateMap[d].revenue : dateMap[d].count
+  );
+  const maxVal = Math.max(...chartVals, 1);
+
+  // Recent bookings: last 5 sorted by createdAt
+  const recent = [...bookings]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
+  const stats = [
+    { label: "Total Bookings", value: totalBookings, icon: "🎟️", badge: "Live" },
+    { label: "Total Revenue", value: `₹${totalRevenue.toLocaleString("en-IN")}`, icon: "💰" },
+    { label: "Pending", value: pendingCount, icon: "⏳" },
+    { label: "Total Guests", value: totalGuests, icon: "👥" },
+  ];
 
   return (
     <div style={{ padding: 30, background: "#0b1520", minHeight: "100vh" }}>
 
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div>
+          <h1 style={{ color: "#fff", fontSize: 20, fontWeight: 600, margin: 0 }}>Dashboard</h1>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: "4px 0 0" }}>Mumbai Tours Admin</p>
+        </div>
+        <button
+          onClick={fetchData}
+          style={{
+            padding: "7px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
+            background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6,
+          }}
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ background: "#FCEBEB", color: "#A32D2D", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
+          {error}
+        </div>
+      )}
+
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
-        {data.stats.map((s, i) => (
-          <div key={i} style={{
-            background: "#0d1b2a",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 12,
-            padding: "16px 18px",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {stats.map((s, i) => (
+          <div key={i} style={{ background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 20 }}>{s.icon}</div>
-              <span style={{
-                fontSize: 10,
-                padding: "3px 8px",
-                borderRadius: 20,
-                background: "rgba(29,158,117,0.15)",
-                color: "#1D9E75",
-              }}>
-                {s.change}
-              </span>
+              {s.badge && (
+                <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "rgba(29,158,117,0.15)", color: "#1D9E75" }}>
+                  {s.badge}
+                </span>
+              )}
             </div>
-
             <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginTop: 10 }}>
-              {s.value}
+              {loading ? "—" : s.value}
             </div>
-
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-              {s.label}
-            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Chart */}
-      <div style={{
-        background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 12, padding: "20px 22px", marginBottom: 24,
-      }}>
+      <div style={{ background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "20px 22px", marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>Monthly Performance</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>Revenue by Date</div>
           <div style={{ display: "flex", gap: 6 }}>
-            {["revenue", "users"].map(t => (
-              <button key={t} onClick={() => setChartType(t)} style={{
-                padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)",
-                background: chartType === t ? "#D4A847" : "transparent",
-                color: chartType === t ? "#1a1200" : "rgba(255,255,255,0.5)",
-                fontSize: 11, fontWeight: 500, cursor: "pointer", textTransform: "capitalize",
-              }}>{t}</button>
+            {["revenue", "bookings"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setChartType(t)}
+                style={{
+                  padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)",
+                  background: chartType === t ? "#D4A847" : "transparent",
+                  color: chartType === t ? "#1a1200" : "rgba(255,255,255,0.5)",
+                  fontSize: 11, fontWeight: 500, cursor: "pointer", textTransform: "capitalize",
+                }}
+              >
+                {t}
+              </button>
             ))}
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 140 }}>
-          {data.monthly.map((m, i) => {
-            const val = chartType === "revenue" ? m.revenue : m.users
-            const max = chartType === "revenue" ? maxRevenue : maxUsers
-            const pct = (val / max) * 100
-            return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
-                <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>
-                  <div style={{
-                    width: "100%", height: `${pct}%`, minHeight: 4,
-                    background: i === data.monthly.length - 2
-                      ? "#D4A847"
-                      : "rgba(212,168,71,0.25)",
-                    borderRadius: "4px 4px 0 0",
-                    transition: "height 0.4s ease",
-                  }} />
+        {loading ? (
+          <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            Loading...
+          </div>
+        ) : chartDates.length === 0 ? (
+          <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            No data
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 140 }}>
+            {chartDates.map((date, i) => {
+              const pct = (chartVals[i] / maxVal) * 100;
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
+                  <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>
+                    <div
+                      style={{
+                        width: "100%", height: `${pct}%`, minHeight: 4,
+                        background: i === chartDates.length - 1 ? "#D4A847" : "rgba(212,168,71,0.25)",
+                        borderRadius: "4px 4px 0 0", transition: "height 0.4s ease",
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{date}</div>
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{m.month}</div>
-              </div>
-            )
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Recent Bookings */}
-      <div style={{
-        background: "#0d1b2a",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 12,
-      }}>
-        <div style={{
-          padding: "16px 20px",
-          display: "flex",
-          justifyContent: "space-between"
-        }}>
-          <div style={{ color: "#fff" }}>Recent Bookings</div>
-
-          {/* ✅ FIX */}
-          <Link href="/reports" style={{ color: "#D4A847" }}>
-            View all →
-          </Link>
+      <div style={{ background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ color: "#fff", fontWeight: 500, fontSize: 14 }}>Recent Bookings</div>
+          <Link href="/reports" style={{ color: "#D4A847", fontSize: 13 }}>View all →</Link>
         </div>
 
-        {data.bookings.map((b, i) => (
-          <div key={i} style={{
-            display: "grid",
-            gridTemplateColumns: "80px 1fr 1fr 80px 90px 90px",
-            padding: "13px 20px",
-            fontSize: 12,
-            borderTop: "1px solid rgba(255,255,255,0.04)",
-            color: "#fff"
-          }}>
-            <span>{b.id}</span>
-            <span>{b.name}</span>
-            <span>{b.tour}</span>
-            <span>{b.date}</span>
-            <span style={{ color: "#D4A847" }}>{b.amount}</span>
+        {/* Table header */}
+        <div style={{ display: "grid", gridTemplateColumns: "90px minmax(0,1fr) minmax(0,1fr) 65px 75px 80px 80px", padding: "10px 20px", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", borderBottom: "1px solid rgba(255,255,255,0.05)", gap: 8 }}>
+          <span>ID</span><span>NAME</span><span>TOUR</span><span>TYPE</span><span>DATE</span><span>AMOUNT</span><span>STATUS</span>
+        </div>
 
-            <span style={{
-              padding: "3px 10px",
-              borderRadius: 20,
-              fontSize: 10,
-              background: statusColor[b.status].bg,
-              color: statusColor[b.status].text,
-              textAlign: "center",
-            }}>
-              {b.status}
-            </span>
-          </div>
-        ))}
+        {loading ? (
+          <div style={{ padding: 30, textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading...</div>
+        ) : recent.length === 0 ? (
+          <div style={{ padding: 30, textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No bookings found</div>
+        ) : (
+          recent.map((b, i) => (
+            <div
+              key={i}
+              style={{
+                display: "grid", gridTemplateColumns: "90px minmax(0,1fr) minmax(0,1fr) 65px 75px 80px 80px",
+                padding: "13px 20px", fontSize: 12, borderTop: "1px solid rgba(255,255,255,0.04)",
+                color: "#fff", alignItems: "center", gap: 8,
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontFamily: "monospace" }}>
+                {b.bookingId}
+              </span>
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.name}</span>
+              <span style={{ color: "rgba(255,255,255,0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.tour}</span>
+              <span>
+                <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(55,138,221,0.15)", color: "#85B7EB" }}>
+                  {formatType(b.bookingType)}
+                </span>
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.4)" }}>{formatDate(b.date)}</span>
+              <span style={{ color: "#D4A847", fontWeight: 600 }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</span>
+              <span>
+                <span style={{
+                  padding: "3px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                  background: statusColor[b.bookingStatus]?.bg || "#eee",
+                  color: statusColor[b.bookingStatus]?.text || "#333",
+                }}>
+                  {b.bookingStatus}
+                </span>
+              </span>
+            </div>
+          ))
+        )}
       </div>
-
     </div>
   );
 }

@@ -10,8 +10,7 @@ import LibraryBooksOutlinedIcon from '@mui/icons-material/LibraryBooksOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import LogoutIcon from "@mui/icons-material/Logout";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
-import ExpandLess from "@mui/icons-material/ExpandLess";
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ReduceCapacityOutlinedIcon from '@mui/icons-material/ReduceCapacityOutlined';
 import AirplaneTicketOutlinedIcon from '@mui/icons-material/AirplaneTicketOutlined';
@@ -69,13 +68,17 @@ export default function SideBaar(props) {
   const [open2, setOpen2] = React.useState(false);
   const [open3, setOpen3] = React.useState(false);
   const [open4, setOpen4] = React.useState(false);
-  const [open5, setOpen5] = React.useState(false)
+  const [open5, setOpen5] = React.useState(false);
+  const [open6, setOpen6] = React.useState(false);
+
+
 
   const handleClick1 = () => setOpen1(!open1);
   const handleClick2 = () => setOpen2(!open2);
   const handleClick3 = () => setOpen3(!open3);
   const handleClick4 = () => setOpen4(!open4);
   const handleClick5 = () => setOpen5(!open5);
+  const handleClick6 = () => setOpen6(!open6)
 
   // ── State
   const [Dashboard, setDashboard] = useState({
@@ -109,6 +112,12 @@ export default function SideBaar(props) {
     pages: [{ id: 0, allowed: false }],
   });
 
+  const [bookingDetails, setbookingDetails] = useState({
+    id: 0, allowed: false,
+    pages: [{ id: 0, allowed: false }],
+    pages: [{ id: 0, allowed: false }],
+  });
+
   // ── Load modules from redux
   useEffect(() => {
     const modules = loginDetails?.roleInfo?.modules;
@@ -120,7 +129,7 @@ export default function SideBaar(props) {
     const popularIslandModule = modules.find(m => m.id === 500003);
     const mumbaiWalkingModule = modules.find(m => m.id === 123456);
     const mumbaiPrivateModule = modules.find(m => m.id === 187532);
-
+    const bookingDetailsModule = modules.find(m => m.id === 198759)
 
     if (dashboardModule) {
       setDashboard({
@@ -206,6 +215,21 @@ export default function SideBaar(props) {
       });
     }
 
+    if (bookingDetailsModule) {
+      setbookingDetails({
+        id: bookingDetailsModule.id,
+        allowed: bookingDetailsModule.allowed,
+        pages: [{
+          id: bookingDetailsModule.pages[0]?.id || 0,
+          allowed: bookingDetailsModule.pages[0]?.allowed || false
+        },
+        {
+          id: bookingDetailsModule.pages[1]?.id || 0,
+          allowed: bookingDetailsModule.pages[1]?.allowed || false
+        }]
+      });
+    }
+
   }, [loginDetails]);
 
   //Auto open dropdown on active route 
@@ -215,6 +239,8 @@ export default function SideBaar(props) {
     if (["/popularIsland", "/listIsland"].includes(pathname)) setOpen3(true);
     if (["/mumbaiWalking", "/listMumbaiWalkingTour"].includes(pathname)) setOpen4(true);
     if (["/mumbaiPrivateTour", "/listMumbaiPrivateTour"].includes(pathname)) setOpen5(true);
+    if (["/addBookingDetails", "/listBookingDetails"].includes(pathname)) setOpen6(true);
+
   }, [pathname]);
 
   //Drawer content
@@ -427,6 +453,40 @@ export default function SideBaar(props) {
         </List>
       )}
 
+
+      {/*Booking Details Module*/}
+      {bookingDetails.id === 198759 && bookingDetails.allowed === true && (
+        <List disablePadding>
+          <ListItemButton onClick={handleClick6} sx={{ px: 2, py: 1.2, color: "#D4A847" }}>
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              <AddCircleOutlinedIcon sx={{ color: "#D4A847", fontSize: 20 }} />
+            </ListItemIcon>
+            <ListItemText primary="Booking Details Tour" sx={{ "& .MuiListItemText-primary": { color: "#D4A847", fontSize: 14, fontWeight: 600 } }} />
+            {open6
+              ? <ExpandLess sx={{ color: "#D4A847", fontSize: 18 }} />
+              : <ExpandMore sx={{ color: "#D4A847", fontSize: 18 }} />}
+          </ListItemButton>
+          <Collapse in={open6} timeout="auto" unmountOnExit>
+            {bookingDetails.pages[0].id === 897373 && bookingDetails.pages[0].allowed && (
+              <ListItemButton component={Link} href="/addBookingDetails" sx={activeItemSx(isActive("/addBookingDetails"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <AirplaneTicketOutlinedIcon sx={activeIconSx(isActive("/addBookingDetails"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Add-Booking-Details" sx={activeTextSx(isActive("/mumbaiPrivateTour"))} />
+              </ListItemButton>
+            )}
+            {/* listBookingDetails */}
+            {bookingDetails.pages[1].id === 938366 && bookingDetails.pages[1].allowed && (
+              <ListItemButton component={Link} href="/listBookingDetails" sx={activeItemSx(isActive("/listBookingDetails"))}>
+                <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ReorderOutlinedIcon sx={activeIconSx(isActive("/listBookingDetails"))} fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="list-Booking-Details" sx={activeTextSx(isActive("/listBookingDetails"))} />
+              </ListItemButton>
+            )}
+          </Collapse>
+        </List>
+      )}
     </Box>
   );
 

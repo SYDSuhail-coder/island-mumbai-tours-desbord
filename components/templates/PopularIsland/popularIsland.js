@@ -5,7 +5,8 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const PopularIsland = () => {
+
+const MumbaiWalkingTour = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -66,17 +67,8 @@ const PopularIsland = () => {
     e.preventDefault();
     setSubmitting(true);
     const requiredFields = [
-      "title",
-      "description",
-      "duration",
-      "transport",
-      "location",
-      "maxGuests",
-      "pricePerPerson",
-      "child",
-      "rating",
-      "reviewsCount",
-      "badge",
+      "title","description","duration","transport","location",
+      "maxGuests","pricePerPerson","child","rating","reviewsCount","badge",
     ];
 
     const hasEmptyField = requiredFields.some((field) => !formData[field]);
@@ -102,21 +94,9 @@ const PopularIsland = () => {
       }
       toast.success("Tour Added Successfully");
       setFormData({
-        title: "",
-        description: "",
-        duration: "",
-        transport: "",
-        location: "",
-        maxGuests: "",
-        pricePerPerson: "",
-        child: "",
-        rating: "",
-        reviewsCount: "",
-        badge: "",
-        freeCancellation: false,
-        isActive: true,
-        coverImage: null,
-        images: [],
+        title: "", description: "", duration: "", transport: "", location: "",
+        maxGuests: "", pricePerPerson: "", child: "", rating: "", reviewsCount: "",
+        badge: "", freeCancellation: false, isActive: true, coverImage: null, images: [],
       });
       setCoverPreview(null);
       setGalleryPreviews([]);
@@ -126,414 +106,129 @@ const PopularIsland = () => {
     }
   };
 
+  // shared styles
+  const inputStyle = {
+    width: "100%",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 8,
+    padding: "10px 14px",
+    color: "#fff",
+    fontSize: 13,
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.2s",
+  };
+
+  const labelStyle = {
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "rgba(255,255,255,0.4)",
+    marginBottom: 6,
+    display: "block",
+  };
+
+  const sectionLabel = {
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: "0.15em",
+    textTransform: "uppercase",
+    color: "#D4A847",
+    marginBottom: 16,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  };
+
+  const fieldWrap = { display: "flex", flexDirection: "column" };
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
+
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .pi-root {
-          min-height: 100vh;
-          background: #fdf8f2;
-          background-image:
-            radial-gradient(ellipse 70% 50% at 5% 0%, rgba(234,179,8,0.12) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 40% at 95% 100%, rgba(234,88,12,0.08) 0%, transparent 55%),
-            radial-gradient(ellipse 40% 30% at 50% 50%, rgba(251,191,36,0.05) 0%, transparent 60%);
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          padding: 48px 20px 64px;
-          font-family: 'Outfit', sans-serif;
+        .wt-input:focus { border-color: rgba(212,168,71,0.6) !important; background: rgba(212,168,71,0.04) !important; }
+        .wt-input::placeholder { color: rgba(255,255,255,0.2); }
+        .wt-textarea:focus { border-color: rgba(212,168,71,0.6) !important; background: rgba(212,168,71,0.04) !important; }
+        .wt-textarea::placeholder { color: rgba(255,255,255,0.2); }
+        .wt-upload:hover { border-color: rgba(212,168,71,0.5) !important; background: rgba(212,168,71,0.04) !important; }
+        .wt-switch { width:40px; height:22px; background:rgba(255,255,255,0.12); border-radius:100px; position:relative; transition:background 0.25s; flex-shrink:0; }
+        .wt-switch::after { content:''; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.25s; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .wt-check:checked + .wt-switch { background:#D4A847; }
+        .wt-check:checked + .wt-switch::after { transform:translateX(18px); }
+        .wt-check { display:none; }
+        .btn-loader { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top:2px solid #fff; border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .wt-img-remove { position:absolute; top:6px; right:6px; width:22px; height:22px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; }
+        .wt-img-remove:hover { background:#ef4444; }
+        @media(max-width:640px){
+          .wt-grid { grid-template-columns:1fr !important; }
+          .wt-upload-grid { grid-template-columns:1fr !important; }
         }
-
-        .pi-card {
-          width: 100%;
-          max-width: 980px;
-          background: #ffffff;
-          border: 1px solid rgba(0,0,0,0.07);
-          border-radius: 24px;
-          padding: 48px 52px 56px;
-          box-shadow:
-            0 4px 6px rgba(0,0,0,0.04),
-            0 20px 60px rgba(180,120,0,0.07),
-            0 1px 0 rgba(255,255,255,0.9) inset;
-        }
-
-        .pi-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 40px;
-          padding-bottom: 28px;
-          border-bottom: 2px solid #fef3c7;
-        }
-
-        .pi-badge {
-          background: linear-gradient(135deg, #f59e0b, #fbbf24);
-          color: #fff;
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          padding: 5px 13px;
-          border-radius: 100px;
-          box-shadow: 0 2px 8px rgba(245,158,11,0.3);
-        }
-
-        .pi-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 30px;
-          color: #1c1408;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-
-        .pi-section-label {
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: #b45309;
-          margin-bottom: 18px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .pi-section-label::after {
-          content: '';
-          flex: 1;
-          height: 1.5px;
-          background: linear-gradient(90deg, #fde68a, transparent);
-        }
-
-        .pi-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px 28px;
-          margin-bottom: 32px;
-        }
-
-        .pi-field {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-        }
-
-        .pi-field label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-          color: #78350f;
-        }
-
-        .pi-input {
-          background: #fafaf8;
-          border: 1.5px solid #e5e0d5;
-          border-radius: 10px;
-          padding: 11px 15px;
-          color: #1c1408;
-          font-family: 'Outfit', sans-serif;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-          width: 100%;
-        }
-        .pi-input:focus {
-          border-color: #f59e0b;
-          background: #fffbf2;
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
-        }
-        .pi-input::placeholder { color: #b8ad9e; }
-
-        .pi-textarea {
-          background: #fafaf8;
-          border: 1.5px solid #e5e0d5;
-          border-radius: 10px;
-          padding: 13px 15px;
-          color: #1c1408;
-          font-family: 'Outfit', sans-serif;
-          font-size: 14px;
-          outline: none;
-          resize: vertical;
-          width: 100%;
-          min-height: 110px;
-          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-        }
-        .pi-textarea:focus {
-          border-color: #f59e0b;
-          background: #fffbf2;
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
-        }
-        .pi-textarea::placeholder { color: #b8ad9e; }
-
-        /* Toggles */
-        .pi-toggles {
-          display: flex;
-          gap: 24px;
-          margin-bottom: 32px;
-        }
-
-        .pi-toggle {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-          user-select: none;
-        }
-
-        .pi-toggle input[type="checkbox"] { display: none; }
-
-        .pi-switch {
-          width: 40px;
-          height: 22px;
-          background: #e5e0d5;
-          border-radius: 100px;
-          position: relative;
-          transition: background 0.25s;
-          flex-shrink: 0;
-        }
-        .pi-switch::after {
-          content: '';
-          position: absolute;
-          width: 16px;
-          height: 16px;
-          background: #fff;
-          border-radius: 50%;
-          top: 3px;
-          left: 3px;
-          transition: transform 0.25s;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-        }
-        .pi-toggle input:checked + .pi-switch {
-          background: #f59e0b;
-        }
-        .pi-toggle input:checked + .pi-switch::after {
-          transform: translateX(18px);
-        }
-
-        .pi-toggle-text {
-          font-size: 13px;
-          font-weight: 500;
-          color: #4b3a1f;
-        }
-
-        /* Upload areas */
-        .pi-upload-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 28px;
-          margin-bottom: 36px;
-        }
-
-        .pi-upload-section { display: flex; flex-direction: column; gap: 12px; }
-
-        .pi-upload-box {
-  border: 2px dashed #e5d9c3;
-  border-radius: 14px;
-  padding: 0;               
-  text-align: center;
-  cursor: pointer;
-  position: relative;
-  transition: border-color 0.2s, background 0.2s;
-  min-height: 220px;       
-  height: 220px;           
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fdf8f0;
-  overflow: hidden;
-}
-        .pi-upload-box:hover {
-          border-color: #f59e0b;
-          background: #fffbf0;
-        }
-
-        .pi-upload-box input[type="file"] {
-          position: absolute;
-          inset: 0;
-          opacity: 0;
-          cursor: pointer;
-          width: 100%;
-          height: 100%;
-        }
-
-        .pi-upload-inner { pointer-events: none; }
-
-        .pi-upload-icon { font-size: 26px; margin-bottom: 6px; }
-
-        .pi-upload-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: #3d2c0e;
-          margin-bottom: 3px;
-        }
-
-        .pi-upload-sub { font-size: 11px; color: #a8956d; }
-
-        /* Image grid previews */
-        .pi-images-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-          gap: 8px;
-        }
-
-        .pi-img-thumb-wrap {
-          position: relative;
-          border-radius: 10px;
-          overflow: hidden;
-          aspect-ratio: 1;
-          border: 1.5px solid #e5d9c3;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        }
-
-        .pi-img-thumb-wrap img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        .pi-img-remove {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          width: 20px;
-          height: 20px;
-          background: rgba(0,0,0,0.55);
-          color: #fff;
-          border: none;
-          border-radius: 50%;
-          font-size: 12px;
-          line-height: 1;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s;
-          z-index: 2;
-        }
-        .pi-img-remove:hover { background: #ef4444; }
-
-        .pi-img-count {
-          font-size: 11px;
-          color: #92764a;
-          font-weight: 500;
-          margin-top: 4px;
-        }
-
-        /* Submit */
-        .pi-submit {
-          width: 100%;
-          padding: 16px;
-          background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
-          border: none;
-          border-radius: 12px;
-          color: #fff;
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          cursor: pointer;
-          transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-          box-shadow: 0 4px 20px rgba(217,119,6,0.3);
-        }
-        .pi-submit:hover {
-          opacity: 0.94;
-          transform: translateY(-1px);
-          box-shadow: 0 6px 28px rgba(217,119,6,0.4);
-        }
-        .pi-submit:active { transform: translateY(0); }
-
-        @media (max-width: 640px) {
-          .pi-card { padding: 28px 18px 36px; }
-          .pi-grid, .pi-upload-grid { grid-template-columns: 1fr; }
-          .pi-toggles { flex-direction: column; gap: 16px; }
-        }
-
-        .pi-submit {
-  background: #d97706;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 140px;
-  min-height: 45px;
-}
-
-.pi-submit:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-loader {
-  width: 18px;
-  height: 18px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top: 3px solid #fff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
       `}</style>
 
-      <div className="pi-root">
-        <div className="pi-card">
+      {/* Page background */}
+      <div style={{ minHeight: "100vh", background: "#0b1520", padding: "40px 20px 60px", fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+
+        {/* Card */}
+        <div style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          background: "#0d1b2a",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 16,
+          padding: "36px 40px 48px",
+        }}>
+
           {/* Header */}
-          <div className="pi-header">
-            <span className="pi-badge">Mumbai Tours</span>
-            <h1 className="pi-title">Add Popuar Tour</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32, paddingBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <span style={{ background: "#D4A847", color: "#1a1200", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 12px", borderRadius: 20 }}>
+              Mumbai Tours
+            </span>
+            <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 600, margin: 0 }}>Add Popular Tour</h1>
           </div>
 
           <form onSubmit={handleSubmit}>
 
-            {/* Basic Info */}
-            <div className="pi-section-label">Tour Details</div>
-            <div className="pi-grid">
-              <div className="pi-field">
-                <label>Title</label>
-                <input className="pi-input" name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Bollywood VIP Studio Tour" />
-              </div>
-              <div className="pi-field">
-                <label>Location</label>
-                <input className="pi-input" name="location" value={formData.location} onChange={handleChange} placeholder="e.g. Film City, Goregaon" />
-              </div>
-              <div className="pi-field">
-                <label>Duration</label>
-                <input className="pi-input" name="duration" value={formData.duration} onChange={handleChange} placeholder="e.g. 5–6 hrs" />
-              </div>
-              <div className="pi-field">
-                <label>Transport</label>
-                <input className="pi-input" name="transport" value={formData.transport} onChange={handleChange} placeholder="e.g. Luxury Car" />
-              </div>
-              <div className="pi-field">
-                <label>Max Guests</label>
-                <input className="pi-input" name="maxGuests" value={formData.maxGuests} onChange={handleChange} placeholder="e.g. 6" />
-              </div>
-              <div className="pi-field">
-                <label>Badge</label>
-                <input className="pi-input" name="badge" value={formData.badge} onChange={handleChange} placeholder="e.g. Premium" />
-              </div>
+            {/* Tour Details */}
+            <div style={{ ...sectionLabel, marginBottom: 16 }}>
+              Tour Details
+              <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
+            </div>
+            <div className="wt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px", marginBottom: 28 }}>
+              {[
+                { label: "Title", name: "title", placeholder: "e.g. Bollywood VIP Studio Tour" },
+                { label: "Location", name: "location", placeholder: "e.g. Film City, Goregaon" },
+                { label: "Duration", name: "duration", placeholder: "e.g. 5–6 hrs" },
+                { label: "Transport", name: "transport", placeholder: "e.g. Luxury Car" },
+                { label: "Max Guests", name: "maxGuests", placeholder: "e.g. 6" },
+                { label: "Badge", name: "badge", placeholder: "e.g. Premium" },
+              ].map(({ label, name, placeholder }) => (
+                <div key={name} style={fieldWrap}>
+                  <label style={labelStyle}>{label}</label>
+                  <input
+                    className="wt-input"
+                    style={inputStyle}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    placeholder={placeholder}
+                  />
+                </div>
+              ))}
             </div>
 
             {/* Description */}
-            <div className="pi-section-label">Description</div>
-            <div style={{ marginBottom: 32 }}>
+            <div style={{ ...sectionLabel, marginBottom: 16 }}>
+              Description
+              <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
+            </div>
+            <div style={{ marginBottom: 28 }}>
               <textarea
-                className="pi-textarea"
+                className="wt-textarea"
+                style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
@@ -542,111 +237,161 @@ const PopularIsland = () => {
             </div>
 
             {/* Pricing & Reviews */}
-            <div className="pi-section-label">Pricing &amp; Reviews</div>
-            <div className="pi-grid" style={{ marginBottom: 32 }}>
-              <div className="pi-field">
-                <label>Price Per Person (₹)</label>
-                <input className="pi-input" name="pricePerPerson" value={formData.pricePerPerson} onChange={handleChange} placeholder="e.g. 3500" />
-              </div>
-              <div className="pi-field">
-                <label>Child Price (₹)</label>
-                <input className="pi-input" name="child" value={formData.child} onChange={handleChange} placeholder="e.g. 500" />
-              </div>
-              <div className="pi-field">
-                <label>Rating</label>
-                <input className="pi-input" name="rating" value={formData.rating} onChange={handleChange} placeholder="e.g. 4.6" />
-              </div>
-              <div className="pi-field">
-                <label>Reviews Count</label>
-                <input className="pi-input" name="reviewsCount" value={formData.reviewsCount} onChange={handleChange} placeholder="e.g. 125" />
-              </div>
+            <div style={{ ...sectionLabel, marginBottom: 16 }}>
+              Pricing &amp; Reviews
+              <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
+            </div>
+            <div className="wt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px", marginBottom: 28 }}>
+              {[
+                { label: "Price Per Person (₹)", name: "pricePerPerson", placeholder: "e.g. 3500" },
+                { label: "Child Price (₹)", name: "child", placeholder: "e.g. 500" },
+                { label: "Rating", name: "rating", placeholder: "e.g. 4.6" },
+                { label: "Reviews Count", name: "reviewsCount", placeholder: "e.g. 125" },
+              ].map(({ label, name, placeholder }) => (
+                <div key={name} style={fieldWrap}>
+                  <label style={labelStyle}>{label}</label>
+                  <input
+                    className="wt-input"
+                    style={inputStyle}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    placeholder={placeholder}
+                  />
+                </div>
+              ))}
             </div>
 
-            {/* Toggles */}
-            <div className="pi-section-label">Settings</div>
-            <div className="pi-toggles" style={{ marginBottom: 32 }}>
-              <label className="pi-toggle">
-                <input type="checkbox" name="freeCancellation" checked={formData.freeCancellation} onChange={handleChange} />
-                <span className="pi-switch" />
-                <span className="pi-toggle-text">Free Cancellation</span>
-              </label>
-              <label className="pi-toggle">
-                <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
-                <span className="pi-switch" />
-                <span className="pi-toggle-text">Is Active</span>
-              </label>
+            {/* Settings / Toggles */}
+            <div style={{ ...sectionLabel, marginBottom: 16 }}>
+              Settings
+              <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
+            </div>
+            <div style={{ display: "flex", gap: 32, marginBottom: 28 }}>
+              {[
+                { name: "freeCancellation", label: "Free Cancellation" },
+                { name: "isActive", label: "Is Active" },
+              ].map(({ name, label }) => (
+                <label key={name} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
+                  <input className="wt-check" type="checkbox" name={name} checked={formData[name]} onChange={handleChange} />
+                  <span className="wt-switch" />
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>{label}</span>
+                </label>
+              ))}
             </div>
 
             {/* Images */}
-            <div className="pi-section-label">Images</div>
-            <div className="pi-upload-grid">
+            <div style={{ ...sectionLabel, marginBottom: 16 }}>
+              Images
+              <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
+            </div>
+            <div className="wt-upload-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 36 }}>
 
-              {/* Cover Image — single */}
-              <div className="pi-upload-section">
-                <div className="pi-upload-box">
-                  <input type="file" accept="image/*" onChange={handleCoverImage} />
+              {/* Cover Image */}
+              <div>
+                <label style={labelStyle}>Cover Image</label>
+                <div
+                  className="wt-upload"
+                  style={{
+                    border: "1.5px dashed rgba(255,255,255,0.15)",
+                    borderRadius: 10,
+                    height: 200,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                    background: "rgba(255,255,255,0.02)",
+                    cursor: "pointer",
+                    transition: "border-color 0.2s, background 0.2s",
+                  }}
+                >
+                  <input type="file" accept="image/*" onChange={handleCoverImage} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
                   {coverPreview ? (
                     <>
-                      <img src={coverPreview} alt="Cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 13, opacity: 0.85 }} />
-                      <button
-                        type="button"
-                        className="pi-img-remove"
-                        style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}
-                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}
-                      >✕</button>
+                      <img src={coverPreview} alt="Cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
+                      <button type="button" className="wt-img-remove" onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}>✕</button>
                     </>
                   ) : (
-                    <div className="pi-upload-inner">
-                      <div className="pi-upload-icon">🖼️</div>
-                      <div className="pi-upload-title">Cover Image</div>
-                      <div className="pi-upload-sub">Click to upload</div>
+                    <div style={{ textAlign: "center", pointerEvents: "none" }}>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>🖼️</div>
+                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>Click to upload cover</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 4 }}>JPG, PNG, WEBP</div>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Gallery Images */}
-              <div className="pi-upload-section">
-                <div className="pi-upload-box">
-                  <input type="file" accept="image/*" multiple onChange={handleImages} />
-                  <div className="pi-upload-inner">
-                    <div className="pi-upload-icon">📷</div>
-                    <div className="pi-upload-title">Gallery Images</div>
-                    <div className="pi-upload-sub">Select multiple photos</div>
+              <div>
+                <label style={labelStyle}>Gallery Images</label>
+                <div
+                  className="wt-upload"
+                  style={{
+                    border: "1.5px dashed rgba(255,255,255,0.15)",
+                    borderRadius: 10,
+                    height: 200,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                    background: "rgba(255,255,255,0.02)",
+                    cursor: "pointer",
+                    transition: "border-color 0.2s, background 0.2s",
+                  }}
+                >
+                  <input type="file" accept="image/*" multiple onChange={handleImages} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+                  <div style={{ textAlign: "center", pointerEvents: "none" }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>Select multiple photos</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 4 }}>Hold Ctrl / Cmd to multi-select</div>
                   </div>
                 </div>
+
+                {/* Gallery thumbnails */}
                 {galleryPreviews.length > 0 && (
-                  <>
-                    <div className="pi-images-grid">
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(72px,1fr))", gap: 8 }}>
                       {galleryPreviews.map((src, i) => (
-                        <div key={i} className="pi-img-thumb-wrap">
-                          <img src={src} alt={`Gallery ${i + 1}`} />
-                          <button
-                            type="button"
-                            className="pi-img-remove"
-                            onClick={() => removeGalleryImage(i)}
-                          >✕</button>
+                        <div key={i} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "1", border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <img src={src} alt={`Gallery ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          <button type="button" className="wt-img-remove" onClick={() => removeGalleryImage(i)}>✕</button>
                         </div>
                       ))}
                     </div>
-                    <div className="pi-img-count">{galleryPreviews.length} gallery image(s)</div>
-                  </>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{galleryPreviews.length} image(s) selected</div>
+                  </div>
                 )}
               </div>
 
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
-              className="pi-submit"
               disabled={submitting}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: submitting ? "rgba(212,168,71,0.5)" : "#D4A847",
+                border: "none",
+                borderRadius: 10,
+                color: "#1a1200",
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                cursor: submitting ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                transition: "opacity 0.2s",
+              }}
             >
-              {submitting ? (
-                <span className="btn-loader"></span>
-              ) : (
-                "Add Tour →"
-              )}
+              {submitting ? <span className="btn-loader" /> : "Add Tour →"}
             </button>
+
           </form>
         </div>
       </div>
@@ -654,4 +399,4 @@ const PopularIsland = () => {
   );
 };
 
-export default PopularIsland;
+export default MumbaiWalkingTour;
