@@ -5,8 +5,10 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Image from "next/image";
 
-const MumbaiWalkingTour = () => {
+
+const PopularIsland = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -67,8 +69,8 @@ const MumbaiWalkingTour = () => {
     e.preventDefault();
     setSubmitting(true);
     const requiredFields = [
-      "title","description","duration","transport","location",
-      "maxGuests","pricePerPerson","child","rating","reviewsCount","badge",
+      "title", "description", "duration", "transport", "location",
+      "maxGuests", "pricePerPerson", "child", "rating", "reviewsCount", "badge",
     ];
 
     const hasEmptyField = requiredFields.some((field) => !formData[field]);
@@ -309,8 +311,13 @@ const MumbaiWalkingTour = () => {
                   <input type="file" accept="image/*" onChange={handleCoverImage} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
                   {coverPreview ? (
                     <>
-                      <img src={coverPreview} alt="Cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
-                      <button type="button" className="wt-img-remove" onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}>✕</button>
+                      <Image
+                        src={coverPreview}
+                        alt="Cover"
+                        fill
+                        unoptimized
+                        style={{ objectFit: "cover", opacity: 0.85 }}
+                      />                      <button type="button" className="wt-img-remove" onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}>✕</button>
                     </>
                   ) : (
                     <div style={{ textAlign: "center", pointerEvents: "none" }}>
@@ -355,8 +362,13 @@ const MumbaiWalkingTour = () => {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(72px,1fr))", gap: 8 }}>
                       {galleryPreviews.map((src, i) => (
                         <div key={i} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "1", border: "1px solid rgba(255,255,255,0.1)" }}>
-                          <img src={src} alt={`Gallery ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                          <button type="button" className="wt-img-remove" onClick={() => removeGalleryImage(i)}>✕</button>
+                          <Image
+                            src={src}
+                            alt={`Gallery ${i + 1}`}
+                            fill
+                            unoptimized
+                            style={{ objectFit: "cover" }}
+                          />                          <button type="button" className="wt-img-remove" onClick={() => removeGalleryImage(i)}>✕</button>
                         </div>
                       ))}
                     </div>
@@ -399,4 +411,4 @@ const MumbaiWalkingTour = () => {
   );
 };
 
-export default MumbaiWalkingTour;
+export default PopularIsland;

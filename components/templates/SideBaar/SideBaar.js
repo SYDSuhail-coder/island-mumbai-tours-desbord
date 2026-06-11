@@ -121,7 +121,7 @@ export default function SideBaar(props) {
   // ── Load modules from redux
   useEffect(() => {
     const modules = loginDetails?.roleInfo?.modules;
-    console.log("All Modules", modules);
+    // console.log("All Modules", modules);
     if (!modules) return;
 
     const dashboardModule = modules.find(m => m.id === 390600);

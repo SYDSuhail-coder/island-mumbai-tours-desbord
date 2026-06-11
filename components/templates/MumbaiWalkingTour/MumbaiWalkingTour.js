@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Image from "next/image";
 
 const MumbaiWalkingTour = () => {
   const [formData, setFormData] = useState({
@@ -199,12 +200,12 @@ const MumbaiWalkingTour = () => {
             </div>
             <div className="wt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px", marginBottom: 28 }}>
               {[
-                { label: "Title", name: "title", placeholder: "e.g. Bollywood VIP Studio Tour" },
-                { label: "Location", name: "location", placeholder: "e.g. Film City, Goregaon" },
-                { label: "Duration", name: "duration", placeholder: "e.g. 5–6 hrs" },
-                { label: "Transport", name: "transport", placeholder: "e.g. Luxury Car" },
-                { label: "Max Guests", name: "maxGuests", placeholder: "e.g. 6" },
-                { label: "Badge", name: "badge", placeholder: "e.g. Premium" },
+                { label: "Title", name: "title", placeholder: "e.g. Dharavi Walking Tour" },
+                { label: "Location", name: "location", placeholder: "e.g. Dharavi, Mumbai" },
+                { label: "Duration", name: "duration", placeholder: "e.g. 3–4 hrs" },
+                { label: "Transport", name: "transport", placeholder: "e.g. Walking" },
+                { label: "Max Guests", name: "maxGuests", placeholder: "e.g. 10" },
+                { label: "Badge", name: "badge", placeholder: "e.g. Popular" },
               ].map(({ label, name, placeholder }) => (
                 <div key={name} style={fieldWrap}>
                   <label style={labelStyle}>{label}</label>
@@ -243,9 +244,9 @@ const MumbaiWalkingTour = () => {
             </div>
             <div className="wt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px", marginBottom: 28 }}>
               {[
-                { label: "Price Per Person (₹)", name: "pricePerPerson", placeholder: "e.g. 3500" },
-                { label: "Child Price (₹)", name: "child", placeholder: "e.g. 500" },
-                { label: "Rating", name: "rating", placeholder: "e.g. 4.6" },
+                { label: "Price Per Person (₹)", name: "pricePerPerson", placeholder: "e.g. 1200" },
+                { label: "Child Price (₹)", name: "child", placeholder: "e.g. 600" },
+                { label: "Rating", name: "rating", placeholder: "e.g. 4.8" },
                 { label: "Reviews Count", name: "reviewsCount", placeholder: "e.g. 125" },
               ].map(({ label, name, placeholder }) => (
                 <div key={name} style={fieldWrap}>
@@ -262,7 +263,7 @@ const MumbaiWalkingTour = () => {
               ))}
             </div>
 
-            {/* Settings / Toggles */}
+            {/* Settings */}
             <div style={{ ...sectionLabel, marginBottom: 16 }}>
               Settings
               <div style={{ flex: 1, height: 1, background: "rgba(212,168,71,0.2)" }} />
@@ -306,11 +307,27 @@ const MumbaiWalkingTour = () => {
                     transition: "border-color 0.2s, background 0.2s",
                   }}
                 >
-                  <input type="file" accept="image/*" onChange={handleCoverImage} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverImage}
+                    style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
+                  />
                   {coverPreview ? (
                     <>
-                      <img src={coverPreview} alt="Cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
-                      <button type="button" className="wt-img-remove" onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}>✕</button>
+                      {/* ✅ next/image — blob URL ke liye unoptimized prop zaruri hai */}
+                      <Image
+                        src={coverPreview}
+                        alt="Cover preview"
+                        fill
+                        unoptimized
+                        style={{ objectFit: "cover", opacity: 0.85 }}
+                      />
+                      <button
+                        type="button"
+                        className="wt-img-remove"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeCoverImage(); }}
+                      >✕</button>
                     </>
                   ) : (
                     <div style={{ textAlign: "center", pointerEvents: "none" }}>
@@ -341,7 +358,13 @@ const MumbaiWalkingTour = () => {
                     transition: "border-color 0.2s, background 0.2s",
                   }}
                 >
-                  <input type="file" accept="image/*" multiple onChange={handleImages} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImages}
+                    style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
+                  />
                   <div style={{ textAlign: "center", pointerEvents: "none" }}>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>Select multiple photos</div>
@@ -355,7 +378,14 @@ const MumbaiWalkingTour = () => {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(72px,1fr))", gap: 8 }}>
                       {galleryPreviews.map((src, i) => (
                         <div key={i} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "1", border: "1px solid rgba(255,255,255,0.1)" }}>
-                          <img src={src} alt={`Gallery ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          {/*  next/image — gallery thumbnail */}
+                          <Image
+                            src={src}
+                            alt={`Gallery ${i + 1}`}
+                            fill
+                            unoptimized
+                            style={{ objectFit: "cover" }}
+                          />
                           <button type="button" className="wt-img-remove" onClick={() => removeGalleryImage(i)}>✕</button>
                         </div>
                       ))}

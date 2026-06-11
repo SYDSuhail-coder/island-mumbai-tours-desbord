@@ -53,9 +53,7 @@ export default function Reports() {
         cache: "no-store",
       });
       const json = await res.json();
-      console.log("json", json)
       const result = json?.data || [];
-      console.log("result")
       setBookings(result);
       setTotalCount(json?.totalcount || 0);
       setHasMore(result.length === LIMIT);

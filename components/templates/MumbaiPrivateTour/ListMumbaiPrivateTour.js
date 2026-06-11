@@ -3,302 +3,353 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+    Avatar,
+    AvatarGroup,
+    Box,
+    Card,
+    CardContent,
+    Chip,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    IconButton,
+    Paper,
+    Pagination,
+    Rating,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Tooltip,
+    Typography,
+    Button,
+    Stack,
+} from "@mui/material";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
+import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import axios from "axios";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
-// ── Image Preview Modal ──
-const ImageModal = ({ open, onClose, images = [], title }) => {
-  if (!open) return null;
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }} onClick={onClose}>
-      <div style={{ background:"#0d1b2a", border:"1px solid rgba(255,255,255,0.1)", borderRadius:16, padding:28, maxWidth:740, width:"100%", maxHeight:"85vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:16 }}>🖼️</span>
-            <span style={{ color:"#fff", fontWeight:600, fontSize:15 }}>Gallery — {title}</span>
-          </div>
-          <button onClick={onClose} style={{ background:"rgba(255,255,255,0.08)", border:"none", color:"rgba(255,255,255,0.6)", width:32, height:32, borderRadius:8, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10 }}>
-          {images.map((src, i) => (
-            <img key={i} src={src} alt={`img-${i+1}`} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)" }} />
-          ))}
-        </div>
-        <div style={{ marginTop:20, textAlign:"right" }}>
-          <button onClick={onClose} style={{ padding:"8px 20px", background:"transparent", border:"1px solid rgba(212,168,71,0.4)", borderRadius:8, color:"#D4A847", fontSize:13, cursor:"pointer" }}>Close</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Delete Confirm Modal ──
-const DeleteModal = ({ open, onClose, onConfirm, title, deleting }) => {
-  if (!open) return null;
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }} onClick={onClose}>
-      <div style={{ background:"#0d1b2a", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"28px 32px", maxWidth:420, width:"100%" }} onClick={e=>e.stopPropagation()}>
-        <div style={{ fontSize:20, marginBottom:12 }}>🗑️</div>
-        <div style={{ color:"#fff", fontWeight:600, fontSize:16, marginBottom:10 }}>Delete Tour?</div>
-        <div style={{ color:"rgba(255,255,255,0.5)", fontSize:13, marginBottom:24, lineHeight:1.6 }}>
-          Are you sure you want to delete <span style={{ color:"#D4A847", fontWeight:600 }}>{title}</span>? This action cannot be undone.
-        </div>
-        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
-          <button onClick={onClose} disabled={deleting} style={{ padding:"8px 20px", background:"transparent", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"rgba(255,255,255,0.5)", fontSize:13, cursor:"pointer" }}>Cancel</button>
-          <button onClick={onConfirm} disabled={deleting} style={{ padding:"8px 20px", background:"#ef4444", border:"none", borderRadius:8, color:"#fff", fontSize:13, fontWeight:600, cursor:deleting?"not-allowed":"pointer", opacity:deleting?0.6:1, display:"flex", alignItems:"center", gap:6 }}>
-            {deleting ? <><span style={{ width:14, height:14, border:"2px solid rgba(255,255,255,0.3)", borderTop:"2px solid #fff", borderRadius:"50%", display:"inline-block", animation:"spin 0.8s linear infinite" }} />Deleting...</> : "Delete"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Star Rating ──
-const Stars = ({ value }) => {
-  const stars = [];
-  for (let i = 1; i <= 5; i++) {
-    stars.push(<span key={i} style={{ color: i <= Math.round(value) ? "#D4A847" : "rgba(255,255,255,0.15)", fontSize:13 }}>★</span>);
-  }
-  return <span>{stars}</span>;
-};
+const ImagePreviewDialog = ({ open, onClose, images = [], title }) => (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth
+        PaperProps={{ sx: { background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 3 } }}>
+        <DialogTitle fontWeight={700} sx={{ color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <PhotoLibraryOutlinedIcon sx={{ color: "#D4A847" }} />
+                Gallery — {title}
+            </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 1.5 }}>
+                {images.map((src, i) => (
+                    <Box key={i} component="img" src={src} alt={`image-${i + 1}`}
+                        sx={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: 2, border: "1px solid rgba(255,255,255,0.08)" }}
+                    />
+                ))}
+            </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <Button onClick={onClose} variant="outlined" sx={{ borderColor: "rgba(212,168,71,0.4)", color: "#D4A847" }}>Close</Button>
+        </DialogActions>
+    </Dialog>
+);
 
 // ── Main Component ──
 const ListMumbaiPrivateTour = () => {
-  const router = useRouter();
-  const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [deleteDialog, setDeleteDialog] = useState({});
-  const [deleting, setDeleting] = useState(false);
-  const [imageDialog, setImageDialog] = useState({ open: false, images: [], title: "" });
-  const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+    const router = useRouter();
+    const [tours, setTours] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [deleteDialog, setDeleteDialog] = useState({});
+    const [deleting, setDeleting] = useState(false);
+    const [imageDialog, setImageDialog] = useState({ open: false, images: [], title: "" });
+    const [page, setPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => { fetchTours(page); }, [page]);
+    useEffect(() => { fetchTours(page); }, [page]);
 
-  const fetchTours = async (pageNum = 1) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`/api/get-private-page?from=${pageNum}&to=${PAGE_SIZE}`);
-      const json = res.data;
-      setTotalCount(json?.totalcount || 0);
-      const raw = json?.result?.data || json?.result || json?.data || [];
-      setTours(Array.isArray(raw) ? raw : []);
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      setTours([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchTours = async (pageNum = 1) => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`/api/get-private-page?from=${pageNum}&to=${PAGE_SIZE}`);
+            const json = res.data;
+            setTotalCount(json?.totalcount || 0);
+            const raw = json?.result?.data || json?.result || json?.data || [];
+            setTours(Array.isArray(raw) ? raw : []);
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            setTours([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const openDelete = (slug, title) => setDeleteDialog({ open: true, slug, title });
-  const closeDelete = () => setDeleteDialog({ open: false });
+    const openDelete = (slug, title) => setDeleteDialog({ open: true, slug, title });
+    const closeDelete = () => setDeleteDialog({ open: false, id: null, title: "" });
 
-  const confirmDelete = async () => {
-    setDeleting(true);
-    try {
-      await axios.delete(`/api/delete-private-page/${deleteDialog.slug}`);
-      setTours((prev) => prev.filter((t) => t.slug !== deleteDialog.slug));
-      setTotalCount((prev) => prev - 1);
-      toast.success("Deleted Successfully");
-    } catch (err) {
-      toast.error("Delete failed");
-    } finally {
-      setDeleting(false);
-      closeDelete();
-    }
-  };
+    const confirmDelete = async () => {
+        setDeleting(true);
+        try {
+            await axios.delete(`/api/delete-private-page/${deleteDialog.slug}`);
+            setTours((prev) => prev.filter((t) => t.slug !== deleteDialog.slug));
+            setTotalCount((prev) => prev - 1);
+            toast.success("Deleted Successfully");
+        } catch (err) {
+            console.error(err);
+            toast.error("Delete failed");
+        } finally {
+            setDeleting(false);
+            closeDelete();
+        }
+    };
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const colStyle = { color:"rgba(255,255,255,0.35)", fontSize:10, fontWeight:600, letterSpacing:"0.08em", padding:"10px 14px", textAlign:"left", borderBottom:"1px solid rgba(255,255,255,0.06)", whiteSpace:"nowrap" };
-  const tdStyle  = { padding:"14px", borderBottom:"1px solid rgba(255,255,255,0.04)", verticalAlign:"top" };
+    return (
+        <>
+            <ToastContainer position="top-right" autoClose={3000} />
 
-  return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .row-hover:hover td{background:rgba(255,255,255,0.02)!important;}`}</style>
+            {/* ── Page background ── */}
+            <Box sx={{ p: { xs: 2, md: 4 }, minHeight: "100vh", background: "#0b1520" }}>
 
-      <div style={{ minHeight:"100vh", background:"#0b1520", padding:"30px 24px", fontFamily:"'Inter','Outfit',sans-serif" }}>
+                {/* ── Header ── */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                    <Box>
+                        <Typography variant="h5" fontWeight={700} sx={{ color: "#fff" }}>
+                            Private Tours
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.35)" }}>
+                            {loading ? "Loading..." : `${totalCount} tours total`}
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddCircleOutlineIcon />}
+                        onClick={() => router.push("/mumbaiPrivateTour")}
+                        sx={{
+                            background: "#D4A847",
+                            color: "#1a1200",
+                            fontWeight: 700,
+                            borderRadius: 2,
+                            boxShadow: "none",
+                            "&:hover": { background: "#c49a38", boxShadow: "none" },
+                        }}
+                    >
+                        Add Tour
+                    </Button>
+                </Box>
 
-        {/* Header */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-          <div>
-            <h1 style={{ color:"#fff", fontSize:20, fontWeight:600, margin:0 }}>Private Tours</h1>
-            <p style={{ color:"rgba(255,255,255,0.35)", fontSize:12, margin:"4px 0 0" }}>
-              {loading ? "Loading..." : `${totalCount} tours total`}
-            </p>
-          </div>
-          <button
-            onClick={() => router.push("/mumbaiPrivateTour")}
-            style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 18px", background:"#D4A847", border:"none", borderRadius:9, color:"#1a1200", fontSize:13, fontWeight:700, cursor:"pointer" }}
-          >
-            + Add Tour
-          </button>
-        </div>
+                {/* ── Card ── */}
+                <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid rgba(255,255,255,0.07)", background: "#0d1b2a" }}>
+                    <CardContent sx={{ p: 0 }}>
+                        {loading ? (
+                            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                                <CircularProgress sx={{ color: "#D4A847" }} />
+                            </Box>
+                        ) : tours.length === 0 ? (
+                            <Box sx={{ textAlign: "center", py: 8 }}>
+                                <Typography sx={{ color: "rgba(255,255,255,0.3)" }}>No data found.</Typography>
+                            </Box>
+                        ) : (
+                            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, background: "transparent" }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow sx={{ background: "rgba(255,255,255,0.03)" }}>
+                                            {["Title", "Info", "Pricing", "Rating", "Images", "Status", "Actions"].map((h, i) => (
+                                                <TableCell key={h} align={i === 6 ? "center" : "left"}
+                                                    sx={{ fontWeight: 600, color: "rgba(255,255,255,0.35)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                                                    {h}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    </TableHead>
 
-        {/* Table Card */}
-        <div style={{ background:"#0d1b2a", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, overflow:"hidden" }}>
+                                    <TableBody>
+                                        {tours.map((tour) => (
+                                            <TableRow key={tour._id} hover
+                                                sx={{ "&:last-child td": { border: 0 }, verticalAlign: "top", "&:hover": { bgcolor: "rgba(255,255,255,0.02) !important" } }}>
 
-          {loading ? (
-            <div style={{ padding:60, textAlign:"center", color:"rgba(255,255,255,0.3)", fontSize:14 }}>Loading tours...</div>
-          ) : tours.length === 0 ? (
-            <div style={{ padding:60, textAlign:"center", color:"rgba(255,255,255,0.3)", fontSize:14 }}>No tours found.</div>
-          ) : (
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ width:"100%", borderCollapse:"collapse", minWidth:800 }}>
-                <thead>
-                  <tr style={{ background:"rgba(255,255,255,0.03)" }}>
-                    <th style={colStyle}>TITLE</th>
-                    <th style={colStyle}>INFO</th>
-                    <th style={colStyle}>PRICING</th>
-                    <th style={colStyle}>RATING</th>
-                    <th style={colStyle}>IMAGES</th>
-                    <th style={colStyle}>STATUS</th>
-                    <th style={{ ...colStyle, textAlign:"center" }}>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tours.map((tour) => (
-                    <tr key={tour._id} className="row-hover">
+                                                {/* Title */}
+                                                <TableCell sx={{ minWidth: 240, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Box sx={{ display: "flex", gap: 1.5 }}>
+                                                        <Avatar src={tour.coverImage} alt={tour.title} variant="rounded"
+                                                            sx={{ width: 56, height: 56, flexShrink: 0, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 2 }} />
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight={600} sx={{ mb: 0.3, color: "#fff", fontSize: 13 }}>
+                                                                {tour.title}
+                                                            </Typography>
+                                                            {tour.badge && (
+                                                                <Chip label={tour.badge} size="small"
+                                                                    sx={{ height: 18, fontSize: 9, mb: 0.5, background: "#D4A847", color: "#1a1200", fontWeight: 700 }} />
+                                                            )}
+                                                            <Typography variant="caption"
+                                                                sx={{ color: "rgba(255,255,255,0.35)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", maxWidth: 180 }}>
+                                                                {tour.description}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </TableCell>
 
-                      {/* Title */}
-                      <td style={{ ...tdStyle, minWidth:220 }}>
-                        <div style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
-                          <img
-                            src={tour.coverImage}
-                            alt={tour.title}
-                            style={{ width:70, height:70, objectFit:"cover", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", flexShrink:0, background:"rgba(255,255,255,0.05)" }}
-                            onError={e => { e.target.style.display="none"; }}
-                          />
-                          <div>
-                            <div style={{ color:"#fff", fontWeight:600, fontSize:13, marginBottom:4, lineHeight:1.3 }}>{tour.title}</div>
-                            {tour.badge && (
-                              <span style={{ fontSize:9, padding:"2px 8px", borderRadius:20, background:"#D4A847", color:"#1a1200", fontWeight:700, display:"inline-block", marginBottom:4 }}>{tour.badge}</span>
-                            )}
-                            <div style={{ color:"rgba(255,255,255,0.35)", fontSize:11, lineHeight:1.4, maxWidth:160, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>
-                              {tour.description}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
+                                                {/* Info */}
+                                                <TableCell sx={{ minWidth: 180, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Stack spacing={0.6}>
+                                                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>📍 {tour.location}</Typography>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                            <AccessTimeOutlinedIcon sx={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }} />
+                                                            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)" }}>{tour.duration}</Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                            <DirectionsCarOutlinedIcon sx={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }} />
+                                                            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)" }}>{tour.transport}</Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                            <PeopleAltOutlinedIcon sx={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }} />
+                                                            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)" }}>Max {tour.maxGuests} guests</Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                            {tour.freeCancellation
+                                                                ? <CheckCircleOutlineIcon sx={{ fontSize: 13, color: "#1D9E75" }} />
+                                                                : <CancelOutlinedIcon sx={{ fontSize: 13, color: "#ef4444" }} />}
+                                                            <Typography variant="caption" sx={{ color: tour.freeCancellation ? "#1D9E75" : "#ef4444" }}>
+                                                                {tour.freeCancellation ? "Free Cancellation" : "No Cancellation"}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </TableCell>
 
-                      {/* Info */}
-                      <td style={{ ...tdStyle, minWidth:170 }}>
-                        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                          <span style={{ color:"rgba(255,255,255,0.5)", fontSize:12 }}>📍 {tour.location}</span>
-                          <span style={{ color:"rgba(255,255,255,0.4)", fontSize:12 }}>⏱ {tour.duration}</span>
-                          <span style={{ color:"rgba(255,255,255,0.4)", fontSize:12 }}>🚗 {tour.transport}</span>
-                          <span style={{ color:"rgba(255,255,255,0.4)", fontSize:12 }}>👥 Max {tour.maxGuests}</span>
-                          <span style={{ fontSize:11, color: tour.freeCancellation ? "#1D9E75" : "#ef4444" }}>
-                            {tour.freeCancellation ? "✓ Free Cancellation" : "✗ No Cancellation"}
-                          </span>
-                        </div>
-                      </td>
+                                                {/* Pricing */}
+                                                <TableCell sx={{ minWidth: 110, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Typography variant="body2" fontWeight={700} sx={{ color: "#D4A847" }}>₹{tour.pricePerPerson}</Typography>
+                                                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.3)" }}>per person</Typography>
+                                                    <br />
+                                                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.35)" }}>Child: ₹{tour.child}</Typography>
+                                                </TableCell>
 
-                      {/* Pricing */}
-                      <td style={{ ...tdStyle, minWidth:110 }}>
-                        <div style={{ color:"#D4A847", fontWeight:700, fontSize:15 }}>₹{tour.pricePerPerson}</div>
-                        <div style={{ color:"rgba(255,255,255,0.3)", fontSize:11, marginTop:2 }}>per person</div>
-                        <div style={{ color:"rgba(255,255,255,0.35)", fontSize:11, marginTop:4 }}>Child: ₹{tour.child}</div>
-                      </td>
+                                                {/* Rating */}
+                                                <TableCell sx={{ minWidth: 130, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Rating value={Number(tour.rating)} precision={0.1} readOnly size="small"
+                                                        sx={{ "& .MuiRating-iconFilled": { color: "#D4A847" }, "& .MuiRating-iconEmpty": { color: "rgba(255,255,255,0.15)" } }} />
+                                                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)" }} display="block">
+                                                        {tour.rating} · {tour.reviewsCount} reviews
+                                                    </Typography>
+                                                </TableCell>
 
-                      {/* Rating */}
-                      <td style={{ ...tdStyle, minWidth:130 }}>
-                        <Stars value={Number(tour.rating)} />
-                        <div style={{ color:"rgba(255,255,255,0.4)", fontSize:11, marginTop:4 }}>{tour.rating} · {tour.reviewsCount} reviews</div>
-                      </td>
+                                                {/* Images */}
+                                                <TableCell sx={{ minWidth: 150, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <AvatarGroup max={3} sx={{
+                                                        justifyContent: "flex-start",
+                                                        "& .MuiAvatar-root": { width: 34, height: 34, fontSize: 11, border: "1px solid rgba(255,255,255,0.1) !important", borderRadius: 1.5 },
+                                                    }}>
+                                                        {(tour.images || []).map((src, i) => (
+                                                            <Avatar key={i} src={src} variant="rounded" alt={`img-${i}`} />
+                                                        ))}
+                                                    </AvatarGroup>
+                                                    <Button size="small" startIcon={<PhotoLibraryOutlinedIcon />}
+                                                        sx={{ mt: 0.5, fontSize: 11, p: 0, minWidth: 0, color: "#D4A847" }}
+                                                        onClick={() => setImageDialog({ open: true, images: tour.images || [], title: tour.title })}>
+                                                        {(tour.images || []).length} photos
+                                                    </Button>
+                                                </TableCell>
 
-                      {/* Images */}
-                      <td style={{ ...tdStyle, minWidth:140 }}>
-                        <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:8 }}>
-                          {(tour.images || []).slice(0, 3).map((src, i) => (
-                            <img key={i} src={src} alt={`t${i}`} style={{ width:50, height:50, objectFit:"cover", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)" }}
-                              onError={e => { e.target.style.display="none"; }} />
-                          ))}
-                          {(tour.images || []).length > 3 && (
-                            <div style={{ width:34, height:34, borderRadius:6, background:"rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, color:"rgba(255,255,255,0.4)" }}>
-                              +{(tour.images || []).length - 3}
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => setImageDialog({ open:true, images:tour.images||[], title:tour.title })}
-                          style={{ fontSize:11, color:"#D4A847", background:"transparent", border:"none", cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4 }}
-                        >
-                          🖼 {(tour.images||[]).length} photos
-                        </button>
-                      </td>
+                                                {/* Status */}
+                                                <TableCell sx={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Chip
+                                                        label={tour.isActive ? "Active" : "Inactive"}
+                                                        size="small"
+                                                        variant="outlined"
+                                                        sx={tour.isActive
+                                                            ? { color: "#1D9E75", borderColor: "rgba(29,158,117,0.35)", background: "rgba(29,158,117,0.1)", fontSize: 11 }
+                                                            : { color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.1)", fontSize: 11 }}
+                                                    />
+                                                </TableCell>
 
-                      {/* Status */}
-                      <td style={tdStyle}>
-                        <span style={{
-                          fontSize:11, padding:"3px 10px", borderRadius:20, fontWeight:500,
-                          background: tour.isActive ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.07)",
-                          color: tour.isActive ? "#1D9E75" : "rgba(255,255,255,0.4)",
-                          border: `1px solid ${tour.isActive ? "rgba(29,158,117,0.3)" : "rgba(255,255,255,0.1)"}`,
-                        }}>
-                          {tour.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
+                                                {/* Actions */}
+                                                <TableCell align="center" sx={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                                    <Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
+                                                        <Tooltip title="Edit">
+                                                            <IconButton size="small"
+                                                                sx={{ color: "#D4A847", background: "rgba(212,168,71,0.1)", border: "1px solid rgba(212,168,71,0.2)", borderRadius: 1.5, "&:hover": { background: "rgba(212,168,71,0.2)" } }}
+                                                                onClick={() => router.push(`/editMumbaiPrivateTour/${tour.slug}`)}>
+                                                                <EditOutlinedIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete">
+                                                            <IconButton size="small"
+                                                                sx={{ color: "#ef4444", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 1.5, "&:hover": { background: "rgba(239,68,68,0.2)" } }}
+                                                                onClick={() => openDelete(tour.slug, tour.title)}>
+                                                                <DeleteOutlineIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </Box>
+                                                </TableCell>
 
-                      {/* Actions */}
-                      <td style={{ ...tdStyle, textAlign:"center" }}>
-                        <div style={{ display:"flex", gap:6, justifyContent:"center" }}>
-                          <button
-                            onClick={() => router.push(`/editMumbaiPrivateTour/${tour.slug}`)}
-                            title="Edit"
-                            style={{ width:32, height:32, borderRadius:7, background:"rgba(212,168,71,0.1)", border:"1px solid rgba(212,168,71,0.2)", color:"#D4A847", cursor:"pointer", fontSize:14, display:"flex", alignItems:"center", justifyContent:"center" }}
-                          >✏️</button>
-                          <button
-                            onClick={() => openDelete(tour.slug, tour.title)}
-                            title="Delete"
-                            style={{ width:32, height:32, borderRadius:7, background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)", color:"#ef4444", cursor:"pointer", fontSize:14, display:"flex", alignItems:"center", justifyContent:"center" }}
-                          >🗑️</button>
-                        </div>
-                      </td>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </CardContent>
+                </Card>
 
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                {/* ── Pagination ── */}
+                {!loading && totalPages > 1 && (
+                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 3, gap: 2 }}>
+                        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.35)" }}>
+                            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+                        </Typography>
+                        <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} shape="rounded"
+                            sx={{
+                                "& .MuiPaginationItem-root": { color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" },
+                                "& .MuiPaginationItem-root:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+                                "& .Mui-selected": { background: "#D4A847 !important", color: "#1a1200 !important", fontWeight: 700, borderColor: "#D4A847 !important" },
+                            }}
+                        />
+                    </Box>
+                )}
 
-          {/* Pagination */}
-          {!loading && totalPages > 1 && (
-            <div style={{ padding:"14px 20px", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span style={{ fontSize:12, color:"rgba(255,255,255,0.35)" }}>
-                Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE,totalCount)} of {totalCount}
-              </span>
-              <div style={{ display:"flex", gap:6 }}>
-                <button
-                  onClick={() => setPage(p => Math.max(1, p-1))}
-                  disabled={page === 1}
-                  style={{ padding:"5px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"transparent", color: page===1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", fontSize:12, cursor: page===1 ? "not-allowed" : "pointer" }}
-                >← Prev</button>
-                {Array.from({ length: totalPages }, (_, i) => i+1).map(p => (
-                  <button key={p} onClick={() => setPage(p)} style={{ width:32, height:32, borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background: page===p ? "#D4A847" : "transparent", color: page===p ? "#1a1200" : "rgba(255,255,255,0.5)", fontSize:12, cursor:"pointer", fontWeight: page===p ? 700 : 400 }}>{p}</button>
-                ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p+1))}
-                  disabled={page === totalPages}
-                  style={{ padding:"5px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"transparent", color: page===totalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", fontSize:12, cursor: page===totalPages ? "not-allowed" : "pointer" }}
-                >Next →</button>
-              </div>
-            </div>
-          )}
+                {/* ── Image Preview Dialog ── */}
+                <ImagePreviewDialog
+                    open={imageDialog.open}
+                    onClose={() => setImageDialog({ open: false, images: [], title: "" })}
+                    images={imageDialog.images}
+                    title={imageDialog.title}
+                />
 
-        </div>
-      </div>
+                {/* ── Delete Confirmation Dialog ── */}
+                <Dialog open={deleteDialog.open} onClose={closeDelete} maxWidth="xs" fullWidth
+                    PaperProps={{ sx: { background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 3 } }}>
+                    <DialogTitle fontWeight={700} sx={{ color: "#fff" }}>Delete Tour?</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ color: "rgba(255,255,255,0.5)" }}>
+                            Are you sure you want to delete <strong style={{ color: "#D4A847" }}>{deleteDialog.title}</strong>? This action cannot be undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                        <Button onClick={closeDelete} disabled={deleting} sx={{ color: "rgba(255,255,255,0.4)" }}>Cancel</Button>
+                        <Button variant="contained" color="error" onClick={confirmDelete} disabled={deleting}
+                            startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}>
+                            {deleting ? "Deleting..." : "Delete"}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
-      {/* Modals */}
-      <ImageModal open={imageDialog.open} onClose={() => setImageDialog({ open:false, images:[], title:"" })} images={imageDialog.images} title={imageDialog.title} />
-      <DeleteModal open={deleteDialog.open} onClose={closeDelete} onConfirm={confirmDelete} title={deleteDialog.title} deleting={deleting} />
-    </>
-  );
+            </Box>
+        </>
+    );
 };
 
 export default ListMumbaiPrivateTour;
