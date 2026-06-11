@@ -76,7 +76,7 @@ const EditMumbaiPrivateTour = ({ slug }) => {
     existingGallery.forEach((url) => data.append("existingImages", url));
     newGalleryFiles.forEach((file) => data.append("images", file));
     try {
-      const res = await fetch(`/api/upadete-private-page/${slug}`, { method: "PUT", body: data });
+      const res = await fetch(`/api/update-private-page/${slug}`, { method: "PUT", body: data });
       const result = await res.json();
       if (result?.statusCode === 400) { toast.error(result?.message || "Update failed"); setSaving(false); return; }
       toast.success("Tour Updated Successfully");
