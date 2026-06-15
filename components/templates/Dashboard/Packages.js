@@ -22,27 +22,32 @@ export default function Packages() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
- useEffect(() => {
-  fetchData();
-}, []);
+  useEffect(() => {
+    fetchData();
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
-async function fetchData() {
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await fetch(`/api/get-section-api`, {
-      method: "GET",
-      cache: "no-store",
-    });
-    const json = await res.json();
-    setBookings(json?.data || []);
-  } catch (err) {
-    setError("API se data nahi aaya. Server check karein.");
-  } finally {
-    setLoading(false);
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/get-section-api`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      setBookings(json?.data || []);
+    } catch (err) {
+      setError("API se data nahi aaya. Server check karein.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   // Group by tour name
   const tourMap = {};
@@ -67,12 +72,12 @@ async function fetchData() {
   const maxCount = Math.max(...tours.map((t) => t.count), 1);
 
   return (
-    <div style={{ padding: 30, background: "#0b1520", minHeight: "100vh" }}>
+    <div style={{ padding: isMobile ? 16 : 30, background: "#0b1520", minHeight: "100vh" }}>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h1 style={{ color: "#fff", fontSize: 20, fontWeight: 600, margin: 0 }}>Tour Packages</h1>
+          <h1 style={{ color: "#fff", fontSize: isMobile ? 17 : 20, fontWeight: 600, margin: 0 }}>Tour Packages</h1>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: "4px 0 0" }}>
             {loading ? "Loading..." : `${tours.length} unique tours`}
           </p>
@@ -95,18 +100,33 @@ async function fetchData() {
         </div>
       )}
 
-      {/* Summary stats */}
+      {/* Summary stats — 3 cols desktop, 1 col mobile */}
       {!loading && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+          gap: isMobile ? 10 : 14,
+          marginBottom: 24
+        }}>
           {[
             { label: "Total Tours", value: tours.length, icon: "🗺️" },
             { label: "Total Bookings", value: bookings.length, icon: "🎟️" },
             { label: "Total Revenue", value: `₹${bookings.reduce((s, b) => s + (b.totalAmount || 0), 0).toLocaleString("en-IN")}`, icon: "💰" },
           ].map((s, i) => (
-            <div key={i} style={{ background: "#0d1b2a", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "16px 18px" }}>
-              <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "#fff" }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
+            <div key={i} style={{
+              background: "#0d1b2a",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              padding: isMobile ? "12px 16px" : "16px 18px",
+              display: isMobile ? "flex" : "block",
+              alignItems: isMobile ? "center" : undefined,
+              gap: isMobile ? 12 : undefined,
+            }}>
+              <div style={{ fontSize: isMobile ? 22 : 20, marginBottom: isMobile ? 0 : 8 }}>{s.icon}</div>
+              <div>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: "#fff" }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -119,9 +139,13 @@ async function fetchData() {
         </div>
       )}
 
-      {/* Tour Cards Grid */}
+      {/* Tour Cards Grid — 2 cols desktop, 1 col mobile */}
       {!loading && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: isMobile ? 14 : 20
+        }}>
           {tours.map((tour, i) => {
             const color = TYPE_COLORS[tour.bookingType] || "#1a3a5c";
             const pct = (tour.count / maxCount) * 100;
@@ -136,7 +160,14 @@ async function fetchData() {
                 }}
               >
                 {/* Color top strip */}
-                <div style={{ height: 70, background: color, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+                <div style={{
+                  height: isMobile ? 56 : 70,
+                  background: color,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "0 16px"
+                }}>
                   <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "#D4A847", color: "#1a1200", fontWeight: 600 }}>
                     {formatType(tour.bookingType)}
                   </span>
@@ -146,23 +177,31 @@ async function fetchData() {
                 </div>
 
                 {/* Content */}
-                <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ padding: isMobile ? 14 : 16 }}>
+                  <div style={{
+                    fontSize: isMobile ? 14 : 15,
+                    fontWeight: 500,
+                    color: "#fff",
+                    marginBottom: 14,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                  }}>
                     {tour.name}
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isMobile ? 8 : 12, marginBottom: 14 }}>
                     <div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Bookings</div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: "#D4A847" }}>{tour.count}</div>
+                      <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: "#D4A847" }}>{tour.count}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Guests</div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff" }}>{tour.guests}</div>
+                      <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: "#fff" }}>{tour.guests}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Revenue</div>
-                      <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>
+                      <div style={{ fontSize: isMobile ? 13 : 16, fontWeight: 600, color: "#fff" }}>
                         ₹{tour.revenue.toLocaleString("en-IN")}
                       </div>
                     </div>
