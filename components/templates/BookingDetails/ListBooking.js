@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ListBooking = () => {
   const [data, setData] = useState([]);
@@ -20,6 +22,7 @@ const ListBooking = () => {
       setData(result);
       setHasMore(result.length === limit);
     } catch (error) {
+      toast.error("Bookings load karne mein error aaya.");
       console.log(error);
     } finally {
       setLoading(false);
@@ -30,19 +33,59 @@ const ListBooking = () => {
     getBookingDetails(page);
   }, [page]);
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this booking?");
-    if (!confirmDelete) return;
-    try {
-      await axios.delete(`/api/delete-booking-detail?id=${id}`);
-      setData((prev) => prev.filter((item) => item._id !== id));
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const handleDelete = (id) => {
+    const ConfirmMsg = ({ closeToast }) => (
+      <div>
+        <p style={{ margin: "0 0 10px", fontSize: 13, color: "#f1f5f9" }}>
+          Are you sure you want to delete this booking?
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={async () => {
+              closeToast();
+              try {
+                await axios.delete(`/api/delete-booking-detail/${id}`);
+                setData((prev) => prev.filter((item) => item._id !== id));
+                toast.success("Booking successfully deleted!");
+              } catch (error) {
+                toast.error("Delete karne mein error aaya. Dobara try karein.");
+                console.log(error);
+              }
+            }}
+            style={{
+              background: "#dc2626", border: "none", color: "#fff",
+              padding: "5px 14px", borderRadius: 6, fontSize: 12,
+              fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Yes, Delete
+          </button>
+          <button
+            onClick={closeToast}
+            style={{
+              background: "transparent", border: "1px solid #475569", color: "#94a3b8",
+              padding: "5px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
 
+    toast.warning(<ConfirmMsg />, {
+      autoClose: false,
+      closeOnClick: false,
+      closeButton: false,
+      draggable: false,
+    });
+  };
   const handleEdit = (id) => {
     window.location.href = `/editBookingDetails/${id}`;
+  };
+
+  const handleAddBooking = () => {
+    window.location.href = "/addBookingDetails";
   };
 
   const styles = {
@@ -236,13 +279,43 @@ const ListBooking = () => {
 
   return (
     <div style={styles.page}>
-      {/* Header */}
+      {/* react-toastify container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="dark"
+      />
+
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Booking Details</h2>
+          <h2 style={styles.title}>Booking List Details</h2>
         </div>
+        <button
+          onClick={handleAddBooking}
+          style={{
+            background: "#D4A847",
+            border: "none",
+            color: "#1a1000",
+            padding: "9px 20px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+        >
+          + Add Booking
+        </button>
       </div>
-
       {/* Table */}
       {loading ? (
         <div style={styles.loadingWrap}>
@@ -373,6 +446,5 @@ const ListBooking = () => {
     </div>
   );
 };
-
 
 export default ListBooking;
