@@ -27,7 +27,7 @@ const ALL_STATUSES = ["All", "Pending", "Confirmed", "Cancelled"];
 const ALL_TYPES = ["All Types", "private-tour", "walking-tour", "tours", "book-now-page"];
 const LIMIT = 10;
 
-// ─── Detail Modal ───────────────────────────────────────────────────────────
+//Detail Modal
 function DetailModal({ booking, onClose }) {
   if (!booking) return null;
   return (
@@ -618,7 +618,7 @@ export default function Reports() {
                         </div>
                       )}
 
-                      {/* ✅ Action Bar - Mobile */}
+                      {/*  Action Bar - Mobile */}
                       <ActionBar booking={b} />
                     </div>
                   )}
@@ -725,7 +725,7 @@ export default function Reports() {
                           </div>
                         )}
 
-                        {/* ✅ Action Bar - Desktop (spans all 3 columns) */}
+                        {/*  Action Bar - Desktop (spans all 3 columns) */}
                         <div style={{ gridColumn: "span 3" }}>
                           <ActionBar booking={b} />
                         </div>
