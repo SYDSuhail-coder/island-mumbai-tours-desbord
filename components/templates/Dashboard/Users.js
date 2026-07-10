@@ -19,9 +19,7 @@ import {
   Pagination,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-
 const LIMIT = 5;
-
 const bookingTypeLabel = {
   tours: "Tour",
   "private-tour": "Private Tour",
